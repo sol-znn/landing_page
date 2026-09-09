@@ -2,9 +2,15 @@ import { defineConfig, loadEnv } from 'vite'
 
 /**
  * A static page with no server side and no secrets to substitute -- the only
- * thing worth configuring is where it will be served from, because GitHub
- * Pages serves a project site out of /<repo>/ and every asset URL has to be
- * prefixed accordingly. '/' is right for `npm run dev` and for a user site.
+ * thing worth configuring is where it will be served from, since that decides
+ * the prefix on every asset URL.
+ *
+ * '/' covers both cases this page actually has: `npm run dev`, and the
+ * deployed site, which is a custom domain (zenon.foo) serving from the root.
+ * A project site on the plain https://<owner>.github.io/<repo>/ URL would need
+ * '/<repo>/' instead, via LANDING_BASE_PATH -- get that wrong in either
+ * direction and the assets 404 with no error anywhere, leaving an unstyled
+ * page.
  */
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')

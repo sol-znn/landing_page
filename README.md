@@ -26,12 +26,16 @@ npm run preview
 
 `.github/workflows/deploy.yml` builds and publishes `dist/` to GitHub Pages on
 every push to `master` (or manually via workflow_dispatch). One-time setup:
-Settings -> Pages -> Source: GitHub Actions. Nothing in this bundle is secret,
-so no repository secrets are needed.
+Settings -> Pages -> Source: GitHub Actions, and Settings -> Pages -> Custom
+domain: `zenon.foo`. Nothing in this bundle is secret, so no repository secrets
+are needed.
 
-`vite.config.ts` reads `LANDING_BASE_PATH` for the asset prefix. The workflow
-defaults it to `/<repo>/`, which is right for the plain
-`https://<owner>.github.io/<repo>/` URL; set the `LANDING_BASE_PATH` repository
-variable to `/` if Settings -> Pages -> Custom domain is in use, since a custom
-domain serves from the root and the `/<repo>/` prefix would break every asset.
-The default `/` is also right for `npm run dev` and for a user/org site.
+`vite.config.ts` reads `LANDING_BASE_PATH` for the asset path prefix and
+defaults to `/`, which is what the custom domain needs -- it serves from the
+root. Set the `LANDING_BASE_PATH` repository variable to `/<repo>/` only if the
+custom domain is dropped and the site goes back to the plain
+`https://<owner>.github.io/<repo>/` URL, which serves from a subdirectory.
+
+Getting that prefix wrong fails quietly and looks like a styling bug rather
+than a deploy one: every `assets/...` URL 404s, no stylesheet loads, and the
+page renders as a white background with a black logo.

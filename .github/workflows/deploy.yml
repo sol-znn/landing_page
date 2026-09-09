@@ -7,11 +7,11 @@
 #
 # One-time setup:
 #   1. Settings -> Pages -> Source: GitHub Actions
-#   2. Settings -> Secrets and variables -> Actions -> Variables (optional):
-#        LANDING_BASE_PATH   set to "/" if Settings -> Pages -> Custom domain
-#          is in use -- the default (/<repo>/) is only correct for the plain
-#          https://<owner>.github.io/<repo>/ URL and breaks every asset on a
-#          custom domain, which serves from the root.
+#   2. Settings -> Pages -> Custom domain: zenon.foo
+#
+# Optional, only if the custom domain is ever dropped:
+#   Settings -> Secrets and variables -> Actions -> Variables
+#     LANDING_BASE_PATH   "/<repo>/" -- see the note on the build step below.
 
 name: Deploy to GitHub Pages
 
@@ -46,12 +46,20 @@ jobs:
 
       - name: Build
         env:
-          # A project site with no custom domain is served from
-          # https://<owner>.github.io/<repo>/, so asset URLs need that prefix
-          # -- github.event.repository.name is the repo, whatever it gets
-          # renamed to. A custom domain serves from the root instead, so set
-          # the LANDING_BASE_PATH repository variable to "/" to override this.
-          LANDING_BASE_PATH: ${{ vars.LANDING_BASE_PATH || format('/{0}/', github.event.repository.name) }}
+          # This site is served from a custom domain (zenon.foo) at the root,
+          # so asset URLs take no prefix.
+          #
+          # The default used to be /<repo>/, copied from zenon-faucet's deploy,
+          # on the theory that a repository variable would override it for the
+          # custom domain. That is backwards for a site that only ever deploys
+          # to that domain: when the variable is not set -- which is the state
+          # a fresh clone, a forked repo, or a settings reset lands in -- the
+          # build silently emits /landing_page/assets/... , every one of which
+          # 404s at the domain root. Nothing errors; the page just loads with
+          # no stylesheet, which renders as a white background with a black
+          # logo. Defaulting to the path that is actually correct here means
+          # the failure mode is a missing override, not a silent misbuild.
+          LANDING_BASE_PATH: ${{ vars.LANDING_BASE_PATH || '/' }}
         run: npm run build
 
       - uses: actions/configure-pages@v5
