@@ -22,7 +22,14 @@ body {
   margin: 0;
   display: grid;
   grid-template-rows: 1fr auto;
-  place-items: center;
+  /* Horizontally centered either way; vertically, .stage below stretches to
+     fill this row itself so it can put the mark in the middle of that space
+     and the GitHub icon at the bottom of it, right above the footer. A plain
+     `place-items: center` would instead shrink-wrap .stage around its content
+     and center the whole two-item stack, which pulls the icon up next to the
+     mark instead of down toward the footer. */
+  justify-items: center;
+  align-items: stretch;
   padding: 24px;
   background: var(--bg);
   color: var(--text);
@@ -53,13 +60,48 @@ body {
 .stage {
   position: relative;
   z-index: 2;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Grey and inert until the pointer lands exactly on it -- unlike the mark
+   above, which brightens as the pointer merely approaches, this is a real
+   link and its hover state should mean "you are on the target."
+   flex:none plus the auto top margin above keeps it pinned to the bottom of
+   .stage regardless of how much room .logo's own centering leaves. */
+.github {
+  flex: none;
+  margin-top: auto;
+  padding-top: 24px;
+  color: var(--muted);
+  line-height: 0;
+  transition: color 0.15s ease-out, filter 0.15s ease-out;
+}
+
+.github svg {
+  width: 20px;
+  height: 20px;
+}
+
+.github:hover,
+.github:focus-visible {
+  color: var(--green);
+  filter: drop-shadow(0 0 8px rgba(103, 230, 70, 0.55));
 }
 
 .logo {
   margin: 0;
   line-height: 0;
+  /* Fills whatever space .stage has above the pinned-to-the-bottom .github
+     icon, and centers the mark within it -- so the mark stays in the middle
+     of the page (as if it were the only thing in .stage) instead of drifting
+     up to make room for the icon underneath it. */
+  flex: 1;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  width: 100%;
   /* The ambient pulse lives here rather than on .mark, because a running
      animation outranks everything below it in the cascade: with `filter` in
      the keyframes, the pointer glow set on .mark would be overridden every
@@ -80,6 +122,15 @@ body {
   }
 }
 
+/* Lets --pulse below interpolate smoothly frame to frame. Without this an
+   untyped custom property animates in a single jump partway through instead
+   of easing, since the browser has no declared type to interpolate between. */
+@property --pulse {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 1;
+}
+
 /* Sized off the viewport rather than in pixels: the glyph is the whole page,
    so on a phone it should still be the whole page. The clamp keeps it from
    crowding the footer on a short landscape window. */
@@ -87,24 +138,48 @@ body {
   /* 0 when the pointer is outside MARK_RADIUS, 1 at the glyph's edge; main.ts
      writes it on every pointermove. */
   --glow: 0;
+  --pulse: 1;
 
   width: clamp(120px, 26vmin, 260px);
   height: clamp(120px, 26vmin, 260px);
   color: var(--green);
-  /* Two shadows: a tight one that thickens the strokes themselves, and a wide
-     one that throws light onto the lattice behind. The lattice is additive
-     light on near-black, so without the wide halo the mark reads as flat vinyl
-     stuck on top of it rather than part of the same scene.
+  /* Runs continuously rather than being started on hover -- --glow is 0 far
+     from the glyph, which zeroes the shadows' alpha below regardless of where
+     --pulse sits, so nothing is visible until the pointer is already close.
+     A JS-toggled class that starts the animation on arrival would instead cut
+     in mid-beat every time. */
+  animation: mark-pulse 1.8s ease-in-out infinite;
+  /* Three shadows. The first is a constant, un-hovered halo in the mark's own
+     green -- the lattice behind is additive light on near-black, so without
+     it the mark reads as flat vinyl stuck on top rather than part of the same
+     scene. The other two are the proximity glow: a tight one that thickens
+     the strokes and a wide one that throws light outward, in the dimmer
+     `--green-dim` rather than the mark's own green, so the response to the
+     pointer reads as a distinct, deeper color rather than the glyph just
+     brightening -- and pulsing per --pulse, rather than holding steady, so it
+     reads as alive rather than as a static hover state.
 
-     Both scale with --glow instead of switching on at a threshold, so walking
-     the pointer toward the middle of the page brings the glyph up gradually --
-     a binary on/off at the radius reads as a bug, not a response. */
+     Both terms scale with --glow instead of switching on at a threshold, so
+     walking the pointer toward the middle of the page brings the glow up
+     gradually -- a binary on/off at the radius reads as a bug, not a
+     response. */
   filter:
-    drop-shadow(0 0 calc(2px + var(--glow) * 6px) rgba(103, 230, 70, calc(var(--glow) * 0.5)))
-    drop-shadow(0 0 calc(14px + var(--glow) * 34px) rgba(103, 230, 70, calc(0.26 + var(--glow) * 0.44)));
+    drop-shadow(0 0 14px rgba(103, 230, 70, 0.26))
+    drop-shadow(0 0 calc(2px + var(--glow) * 6px) rgba(64, 191, 33, calc(var(--glow) * var(--pulse) * 0.55)))
+    drop-shadow(0 0 calc(14px + var(--glow) * 34px) rgba(64, 191, 33, calc(var(--glow) * var(--pulse) * 0.6)));
   /* Short enough to feel attached to the pointer, long enough to carry the
      jump to 0 when the pointer leaves the window in one motion. */
   transition: filter 0.18s ease-out;
+}
+
+@keyframes mark-pulse {
+  0%,
+  100% {
+    --pulse: 0.45;
+  }
+  50% {
+    --pulse: 1;
+  }
 }
 
 /* --- footer ------------------------------------------------------------- */
@@ -161,11 +236,16 @@ body {
   color: var(--green);
 }
 
-/* The toggle stops the canvas; it should stop the mark's pulse with it, so
-   "stop motion" means the page is actually still. */
+/* The toggle stops the canvas; it should stop the mark's breathing and its
+   hover pulse with it, so "stop motion" means the page is actually still. */
 body.still .logo {
   animation: none;
   opacity: 1;
+}
+
+body.still .mark {
+  animation: none;
+  --pulse: 1;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -175,6 +255,8 @@ body.still .logo {
   }
 
   .mark {
+    animation: none;
+    --pulse: 1;
     transition: none;
   }
 }

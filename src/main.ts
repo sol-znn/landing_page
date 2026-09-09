@@ -122,12 +122,12 @@ function distanceTo(rect: DOMRect, x: number, y: number): number {
 
 // The footer lights up green within a small radius -- close enough to forgive
 // a pixel or two, not a generous hover zone around it.
-const FOOT_RADIUS = 20
+const FOOT_RADIUS = 10
 
-// The mark's is far wider, because it is not a hit target: the glyph brightens
-// as the pointer crosses the page toward it, so the reach has to be a
-// meaningful share of the screen for that approach to be visible at all.
-const MARK_RADIUS = 260
+// Still wider than the footer's, because the mark is not a hit target: the
+// glyph brightens as the pointer crosses the page toward it, so the reach has
+// to be enough of the screen for that approach to register at all.
+const MARK_RADIUS = 80
 
 /** Eases the linear 0..1 ramp so the glow comes up gently at the far edge of
  *  the radius and firms up near the glyph, rather than climbing flatly. */
