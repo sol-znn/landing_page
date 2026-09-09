@@ -190,7 +190,6 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
   padding-top: 18px;
   font-size: 11px;
   color: #5a5a5a;
@@ -201,6 +200,29 @@ body {
 
 .foot.near {
   color: var(--green);
+}
+
+/* The two lines used to be .foot's own flex children, so the column layout and
+   the gap move down here with them. `color: inherit` is what keeps the
+   proximity highlight working: .near sets the color on .foot, and an anchor
+   would otherwise override it with the UA's link blue. */
+.footlink {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* The pointer highlight is handled by .near, which is already at full strength
+   by the time the pointer is over the link at all. This is the keyboard's
+   equivalent -- .near only ever tracks a pointer. */
+.footlink:focus-visible {
+  color: var(--green);
+  outline: 1px solid var(--green-dim);
+  outline-offset: 5px;
+  border-radius: 3px;
 }
 
 /* --- motion toggle ------------------------------------------------------ */
