@@ -1,0 +1,71 @@
+# Build the landing page and publish it to GitHub Pages.
+#
+# There is nothing secret in this bundle -- no wallet, no RPC endpoint, no
+# per-deploy config -- so the whole workflow is just: build, then publish
+# dist/. The one thing that varies by where it's hosted is the asset path
+# prefix, handled the same way zenon-faucet's deploy does.
+#
+# One-time setup:
+#   1. Settings -> Pages -> Source: GitHub Actions
+#   2. Settings -> Secrets and variables -> Actions -> Variables (optional):
+#        LANDING_BASE_PATH   set to "/" if Settings -> Pages -> Custom domain
+#          is in use -- the default (/<repo>/) is only correct for the plain
+#          https://<owner>.github.io/<repo>/ URL and breaks every asset on a
+#          custom domain, which serves from the root.
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let a run in progress finish rather than cancelling it: a half-deployed
+# page is worse than a stale one.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build
+        env:
+          # A project site with no custom domain is served from
+          # https://<owner>.github.io/<repo>/, so asset URLs need that prefix
+          # -- github.event.repository.name is the repo, whatever it gets
+          # renamed to. A custom domain serves from the root instead, so set
+          # the LANDING_BASE_PATH repository variable to "/" to override this.
+          LANDING_BASE_PATH: ${{ vars.LANDING_BASE_PATH || format('/{0}/', github.event.repository.name) }}
+        run: npm run build
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
