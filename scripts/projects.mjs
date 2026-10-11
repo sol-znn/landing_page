@@ -248,7 +248,11 @@ const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
 
 function renderRows(data) {
   const out = []
+  // Rows go by status, in the order `statuses` lists them (live first,
+  // deprecated last); within one status, in the order the JSON has them.
+  const rank = (p) => data.statuses.indexOf(p.status)
   for (const s of data.sections) {
+    const projects = s.projects.map((p, i) => [p, i]).sort((a, b) => rank(a[0]) - rank(b[0]) || a[1] - b[1]).map(([p]) => p)
     // A <details> per section, closed: the page opens as a list of four
     // headings, and the browser does the opening without a script.
     out.push(
@@ -257,7 +261,7 @@ function renderRows(data) {
       `          <summary><h2>${esc(s.title)}</h2><span class="count">${s.projects.length}</span></summary>`,
       '        <ul class="rows">',
     )
-    for (const p of s.projects) {
+    for (const p of projects) {
       const ver = p.ver ? ` <span class="ver">${esc(p.ver)}</span>` : ''
       out.push(
         '          <li class="row">',
