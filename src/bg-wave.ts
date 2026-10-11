@@ -440,7 +440,12 @@ const streakFragmentShader = /* glsl */ `
 `
 
 function buildStreaks(): LineSegments {
-  const palette = LINK_COLORS.map((hex, i) => new Color(hex).multiplyScalar(LINK_BRIGHTNESS[i]))
+  // The link colours and Bitcoin's orange, lifted like the others for
+  // additive blending.
+  const palette = [
+    ...LINK_COLORS.map((hex, i) => new Color(hex).multiplyScalar(LINK_BRIGHTNESS[i])),
+    new Color(0xf7931a).multiplyScalar(1.25),
+  ]
   const positions: number[] = []
   const colors: number[] = []
   const ends: number[] = []
@@ -594,73 +599,51 @@ export function startBackground(canvas: HTMLCanvasElement, opts: BackgroundOptio
   }
   const onPointerLeave = (redraw: boolean) => (): void => setMouse(10, 10, redraw)
 
-  // "Stop motion" means stop -- a single still frame of the calm, flat
-  // lattice, the same image the page showed before any animation existed.
-  // uAmplitude at 0 removes the swell entirely rather than freezing it
-  // mid-wave, so this doesn't read as a paused animation, just a resting
-  // grid. No rotation, no bars, no requestAnimationFrame loop underneath it.
-  // Resize still redraws that one frame at the new size so it never stretches.
-  if (reducedMotion) {
-    material.uniforms.uAmplitude.value = 0
-    material.uniforms.uCenterGlow.value = 1
-    resize(true)
-    const onResize = (): void => resize(true)
-    const move = onPointerMove(true)
-    const leave = onPointerLeave(true)
-    window.addEventListener('resize', onResize)
-    window.addEventListener('pointermove', move)
-    document.documentElement.addEventListener('pointerleave', leave)
-    return {
-      // The jump plays even here. Stopping the background stops the idle
-      // loop; a click on the mark is a request for this one animation, and
-      // each call draws the single frame it asks for, since nothing else
-      // will.
-      aim,
-      setJump(progress: number, x: number, y: number): void {
-        material.uniforms.uJump.value = progress
-        material.uniforms.uJumpCenter.value.set(x, y)
-        streakMaterial.uniforms.uJump.value = progress
-        streakMaterial.uniforms.uJumpCenter.value.set(x, y)
-        streaks.visible = progress > 0
-        renderer.render(scene, camera)
-      },
-      dispose(): void {
-        window.removeEventListener('resize', onResize)
-        window.removeEventListener('pointermove', move)
-        document.documentElement.removeEventListener('pointerleave', leave)
-        geometry.dispose()
-        material.dispose()
-        streaks.geometry.dispose()
-        streakMaterial.dispose()
-        renderer.dispose()
-      },
-    }
-  }
-
   const links = buildLinks()
   scene.add(links)
   const linkMaterial = links.material as ShaderMaterial
 
-  const onResize = (): void => resize(false)
-  resize(false)
+  // "Stop motion" means stop: no rotation, no bars moving, no
+  // requestAnimationFrame loop underneath. Stopping holds the frame that was
+  // showing, mid-swell and all, and starting again resumes from it. A page
+  // that opens stopped has no frame to hold, so it opens on the calm, flat
+  // lattice the page showed before any animation existed: uAmplitude at 0
+  // and no bars. Resize redraws the held frame so it never stretches.
+  let still = reducedMotion
+  const restingLook = (resting: boolean): void => {
+    const amplitude = resting ? 0 : 0.8
+    material.uniforms.uAmplitude.value = amplitude
+    streakMaterial.uniforms.uAmplitude.value = amplitude
+    material.uniforms.uCenterGlow.value = resting ? 1 : 0
+    links.visible = !resting
+  }
+  restingLook(still)
+
+  const onResize = (): void => resize(still)
+  resize(still)
   window.addEventListener('resize', onResize)
 
-  const move = onPointerMove(false)
-  const leave = onPointerLeave(false)
+  // The handlers read `still` at each event, since it changes under them.
+  const move = (e: PointerEvent): void => onPointerMove(still)(e)
+  const leave = (): void => onPointerLeave(still)()
   window.addEventListener('pointermove', move)
   document.documentElement.addEventListener('pointerleave', leave)
 
   const speed = 0.6
-  material.uniforms.uAmplitude.value = 0.8
-  streakMaterial.uniforms.uAmplitude.value = 0.8
   let frame = 0
-  let running = true
-  const start = performance.now()
+  let running = false
+  // The clock counts time spent running, not wall time, so a pause or a
+  // hidden tab resumes where it stopped instead of skipping ahead.
+  let elapsed = 0
+  let last = 0
 
   const tick = (): void => {
     if (!running) return
     frame = requestAnimationFrame(tick)
-    const t = ((performance.now() - start) / 1000) * speed
+    const now = performance.now()
+    elapsed += (now - last) / 1000
+    last = now
+    const t = elapsed * speed
     material.uniforms.uTime.value = t
     // The swell alone is not enough to rely on: the three waves periodically
     // drift into phase and the field goes nearly still for a stretch. A
@@ -677,22 +660,32 @@ export function startBackground(canvas: HTMLCanvasElement, opts: BackgroundOptio
     renderer.render(scene, camera)
   }
 
-  tick()
+  const run = (): void => {
+    if (running || still || document.hidden) return
+    running = true
+    last = performance.now()
+    tick()
+  }
+
+  const halt = (): void => {
+    running = false
+    cancelAnimationFrame(frame)
+  }
+
+  run()
 
   // A background nobody is looking at should not cost a phone its battery.
   const onVisibility = (): void => {
-    if (document.hidden) {
-      running = false
-      cancelAnimationFrame(frame)
-    } else if (!running) {
-      running = true
-      tick()
-    }
+    if (document.hidden) halt()
+    else run()
   }
   document.addEventListener('visibilitychange', onVisibility)
 
   return {
     aim,
+    // The jump plays on a stopped page too: stopping stops the idle loop, and
+    // a click on the mark is a request for this one animation, so each call
+    // draws the frame it asks for when nothing else will.
     setJump(progress: number, x: number, y: number): void {
       material.uniforms.uJump.value = progress
       material.uniforms.uJumpCenter.value.set(x, y)
@@ -700,10 +693,19 @@ export function startBackground(canvas: HTMLCanvasElement, opts: BackgroundOptio
       streakMaterial.uniforms.uJumpCenter.value.set(x, y)
       linkMaterial.uniforms.uJump.value = progress
       streaks.visible = progress > 0
+      if (still) renderer.render(scene, camera)
+    },
+    setPaused(paused: boolean): void {
+      still = paused
+      if (paused) {
+        halt()
+        return
+      }
+      restingLook(false)
+      run()
     },
     dispose(): void {
-      running = false
-      cancelAnimationFrame(frame)
+      halt()
       streaks.geometry.dispose()
       streakMaterial.dispose()
       window.removeEventListener('resize', onResize)

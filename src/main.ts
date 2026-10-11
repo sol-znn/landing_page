@@ -40,9 +40,9 @@ const ui = {
 // page and it should not wait on a decoration to paint.
 //
 // Motion defaults on and ignores `prefers-reduced-motion` for that default --
-// the toggle button is the actual accessibility affordance. Clicking it stops
-// the canvas to a single still frame of the lattice, not a slowed-down loop,
-// and the choice persists across visits.
+// the toggle button is the actual accessibility affordance. Clicking it holds
+// the canvas on the frame it is showing, not a slowed-down loop, and clicking
+// again resumes from that frame. The choice persists across visits.
 const MOTION_KEY = 'landing:reduced-motion'
 
 function storedReducedMotion(): boolean | null {
@@ -55,6 +55,9 @@ function storedReducedMotion(): boolean | null {
 }
 
 let background: Background | null = null
+/** Which scene `background` is drawing, so a motion toggle can pause it in
+ *  place rather than build another. */
+let backgroundScene: Scene | null = null
 
 // Icon-only: a pause glyph while running (click stops it), a play glyph while
 // stopped (click resumes it) -- the standard transport-control pairing, so the
@@ -127,12 +130,20 @@ async function applyMotion(reduced: boolean): Promise<void> {
   ui.motion.title = label
   ui.motion.innerHTML = reduced ? PLAY_ICON : PAUSE_ICON
   document.body.classList.toggle('still', reduced)
+  // Same scene: pause or resume the one already drawn. Building a new one
+  // would draw a new random graph, and the network would change under the
+  // pointer on every click.
+  if (background && backgroundScene === scene) {
+    background.setPaused(reduced)
+    return
+  }
   try {
     const wanted = scene
     const { startBackground } = await (wanted === 'wave' ? import('./bg-wave.ts') : import('./bg.ts'))
     if (token !== motionToken) return
     background?.dispose()
     background = startBackground(ui.bg, { reducedMotion: reduced })
+    backgroundScene = background ? wanted : null
     // The field streams out of the mark, so a new background is pointed at it
     // before its first frame is seen. One that arrives while a jump is held
     // (see below) is given that too, or it would draw the resting network

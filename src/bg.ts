@@ -347,8 +347,8 @@ const linkFragmentShader = /* glsl */ `
  * streak has no length until the field accelerates and gets longer the
  * faster its point is going, without any length being set here.
  *
- * Each takes one of the three brand colours, in even thirds. Not drawn at
- * all outside a jump.
+ * Each takes one of JUMP_COLORS, in even quarters: the three brand colours
+ * and Bitcoin's orange. Not drawn at all outside a jump.
  */
 const streakVertexShader = /* glsl */ `
   ${flightChunk}
@@ -387,6 +387,10 @@ const streakFragmentShader = /* glsl */ `
 /** Bitcoin's orange. Lifted a little for the same additive-blending reason
  *  as BRAND_BRIGHTNESS. */
 const BITCOIN_ORANGE = new Color(0xf7931a).multiplyScalar(1.25)
+
+/** The streaks' colours. The comets are gone by the launch (they fade with
+ *  the links), so the orange is carried into the jump here instead. */
+const JUMP_COLORS = [...BRAND.map((_, i) => brandColor(i)), BITCOIN_ORANGE]
 
 /** How many comets, each on its own route. Enough that one is nearly always
  *  somewhere on screen: a route is in the fog or behind the viewer for much
@@ -648,7 +652,7 @@ function buildField(): Field {
   const streakColor: number[] = []
   const streakEnd: number[] = []
   for (let i = 0; i < pointPos.length; i += 3) {
-    const color = brandColor(Math.floor(Math.random() * BRAND.length))
+    const color = JUMP_COLORS[Math.floor(Math.random() * JUMP_COLORS.length)]
     streakPos.push(pointPos[i], pointPos[i + 1], pointPos[i + 2], pointPos[i], pointPos[i + 1], pointPos[i + 2])
     streakColor.push(color.r, color.g, color.b, color.r, color.g, color.b)
     streakEnd.push(0, 1)
@@ -721,11 +725,14 @@ export interface Background {
    *  ordinary background. The caller owns the clock, so the page's own
    *  animation and this one run off a single timeline. */
   setJump(progress: number, x: number, y: number): void
+  /** Stops the animation on the frame it is showing, or resumes it from
+   *  there. The graph is built once, so nothing is redrawn differently. */
+  setPaused(paused: boolean): void
 }
 
 export interface BackgroundOptions {
-  /** `true` freezes the background to a single still frame; `false`, the
-   *  default, runs the full animation. Set by the page's own toggle. */
+  /** `true` starts the background paused, on a single still frame; `false`,
+   *  the default, starts it running. Set by the page's own toggle. */
   reducedMotion?: boolean
 }
 
@@ -753,7 +760,7 @@ export function startBackground(canvas: HTMLCanvasElement, opts: BackgroundOptio
   // reports it whenever "Animation effects" is off, which nobody chose on the
   // machines this is seen on, and it left the page still. The toggle on the
   // page is the only thing that stops the motion.
-  const still = opts.reducedMotion ?? false
+  let still = opts.reducedMotion ?? false
 
   const draw = (): void => renderer.render(scene, camera)
 
@@ -806,64 +813,83 @@ export function startBackground(canvas: HTMLCanvasElement, opts: BackgroundOptio
     if (still) draw()
   }
 
-  const disposeField = (): void => {
-    window.removeEventListener('resize', onResize)
-    window.removeEventListener('pointermove', onPointerMove)
-    document.documentElement.removeEventListener('pointerleave', onPointerLeave)
-    for (const object of [field.points, field.links, field.streaks, field.comets]) object.geometry.dispose()
-    for (const material of field.materials) material.dispose()
-    renderer.dispose()
-  }
-
-  // "Stop motion" means stop: one frame of the network, lit toward the mark,
-  // with no flight, no light on the links and no requestAnimationFrame loop
-  // underneath. The pointer still lights what it passes over, one redraw per
-  // move, and a resize redraws so the frame never stretches.
-  if (still) {
-    u.uCenterGlow.value = 1
-    resize(true)
-    return { aim, setJump, dispose: disposeField }
-  }
-
-  resize(false)
+  // "Stop motion" means stop: no flight, no light moving on the links and no
+  // requestAnimationFrame loop underneath. The pointer still lights what it
+  // passes over, one redraw per move, and a resize redraws so the frame never
+  // stretches.
+  //
+  // Stopping holds the frame that was showing. It used to throw the field
+  // away and build a still one, and since every build draws a new random
+  // graph, the network changed under the pointer on every click. A page that
+  // opens stopped has no frame to hold, so it opens on the still image: the
+  // field lit toward the mark, which has no flight to carry the eye there.
+  if (still) u.uCenterGlow.value = 1
+  resize(still)
 
   let frame = 0
-  let running = true
-  const start = performance.now()
+  let running = false
+  // The clock counts time spent running, not wall time, so a pause or a
+  // hidden tab resumes the flight where it stopped instead of skipping ahead.
+  let elapsed = 0
+  let last = 0
 
   const tick = (): void => {
     if (!running) return
     frame = requestAnimationFrame(tick)
-    const seconds = (performance.now() - start) / 1000
-    u.uTime.value = seconds * TIME_SCALE
+    const now = performance.now()
+    elapsed += (now - last) / 1000
+    last = now
+    u.uTime.value = elapsed * TIME_SCALE
     // Kept inside one tunnel length: `fly` wraps on it anyway, and a float
     // that only ever grows loses the precision the wrap depends on.
-    u.uFlight.value = (seconds * CRUISE) % DEPTH
+    u.uFlight.value = (elapsed * CRUISE) % DEPTH
     draw()
   }
 
-  tick()
+  const run = (): void => {
+    if (running || still || document.hidden) return
+    running = true
+    last = performance.now()
+    tick()
+  }
+
+  const halt = (): void => {
+    running = false
+    cancelAnimationFrame(frame)
+  }
+
+  const setPaused = (paused: boolean): void => {
+    still = paused
+    if (paused) {
+      halt()
+      return
+    }
+    u.uCenterGlow.value = 0
+    run()
+  }
+
+  run()
 
   // A background nobody is looking at should not cost a phone its battery.
   const onVisibility = (): void => {
-    if (document.hidden) {
-      running = false
-      cancelAnimationFrame(frame)
-    } else if (!running) {
-      running = true
-      tick()
-    }
+    if (document.hidden) halt()
+    else run()
   }
   document.addEventListener('visibilitychange', onVisibility)
 
   return {
     aim,
     setJump,
+    setPaused,
     dispose(): void {
-      running = false
-      cancelAnimationFrame(frame)
+      halt()
+      window.removeEventListener('resize', onResize)
+      window.removeEventListener('pointermove', onPointerMove)
+      document.documentElement.removeEventListener('pointerleave', onPointerLeave)
       document.removeEventListener('visibilitychange', onVisibility)
-      disposeField()
+      for (const object of [field.points, field.links, field.streaks, field.comets]) object.geometry.dispose()
+      for (const material of field.materials) material.dispose()
+      renderer.dispose()
     },
   }
 }

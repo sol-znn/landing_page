@@ -352,6 +352,7 @@ body.still .mark {
     var(--zenon-green),
     var(--zenon-blue),
     var(--zenon-pink),
+    var(--bitcoin-orange),
     var(--zenon-green)
   );
   filter: blur(30px);
@@ -386,11 +387,13 @@ body.jumping .jump::before {
   }
 }
 
-/* The three brand colours, the same values the bars and streaks use. */
+/* The three brand colours, the same values the bars and streaks use, and
+   Bitcoin's orange, which the comets run in and the jump carries. */
 :root {
   --zenon-green: #00d557;
   --zenon-blue: #0061eb;
   --zenon-pink: #f91690;
+  --bitcoin-orange: #f7931a;
 }
 
 /* Typed for the same reason --pulse is: an untyped length in a gradient stop
@@ -475,7 +478,7 @@ body.jumping .mark {
   }
 }
 
-/* The arrival: rings of the three colours open out of the mark and the core
+/* The arrival: rings of the four colours open out of the mark and the core
    behind them fills the screen, so the last frame is one flat colour and the
    next page replaces a blank rather than a frozen picture. */
 .jump-flash {
@@ -493,9 +496,10 @@ body.jumping .mark {
   background: radial-gradient(
     circle at var(--jx, 50%) var(--jy, 50%),
     #e6ffec calc(var(--flash) * 0.62),
-    var(--zenon-green) calc(var(--flash) * 0.76),
-    var(--zenon-blue) calc(var(--flash) * 0.87),
-    var(--zenon-pink) calc(var(--flash) * 0.95),
+    var(--zenon-green) calc(var(--flash) * 0.74),
+    var(--zenon-blue) calc(var(--flash) * 0.82),
+    var(--zenon-pink) calc(var(--flash) * 0.89),
+    var(--bitcoin-orange) calc(var(--flash) * 0.95),
     transparent var(--flash)
   );
 }
