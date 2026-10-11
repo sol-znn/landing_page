@@ -3,7 +3,7 @@
   "owners": ["sol-znn"],
   "liveUrl": "https://www.zenon.foo/projects/",
   "repo": "sol-znn/landing_page",
-  "statuses": ["live", "devnet", "review", "active", "prototype", "research", "stable", "deprecated"],
+  "statuses": ["live", "stable", "active", "devnet", "review", "prototype", "research", "deprecated"],
   "placement": [
     {
       "match": "^zvm-",
@@ -320,5 +320,5 @@
       ]
     }
   ],
-  "updated": "2026-10-11T20:11:50Z"
+  "updated": "2026-10-11T20:43:29Z"
 }
