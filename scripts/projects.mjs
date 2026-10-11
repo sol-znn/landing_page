@@ -279,13 +279,39 @@ function renderRows(data) {
   return out
 }
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+// The footer's stamp, from `updated` in the JSON, never from the clock, so a
+// render stays a function of the JSON. The full UTC time is on hover.
+function renderUpdated(data) {
+  if (!data.updated) return ''
+  const d = new Date(data.updated)
+  const day = `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`
+  const full = data.updated.replace('T', ' ').replace(/:\d\d(\.\d+)?Z$/, ' UTC')
+  return `<time datetime="${esc(data.updated)}" title="${esc(full)}">Updated ${day}</time>`
+}
+
 function renderHtml(data, html) {
   const eol = html.includes('\r\n') ? '\r\n' : '\n'
   const a = html.indexOf(BEGIN)
   const b = html.indexOf(END)
   if (a < 0 || b < a) fail(`${HTML_PATH} lacks the ${BEGIN} ... ${END} markers`)
   const lineStart = html.lastIndexOf('\n', b) + 1
-  return html.slice(0, a + BEGIN.length) + eol + renderRows(data).join(eol) + eol + html.slice(lineStart)
+  const out = html.slice(0, a + BEGIN.length) + eol + renderRows(data).join(eol) + eol + html.slice(lineStart)
+  const stamp = /(<p class="updated">)[\s\S]*?(<\/p>)/
+  if (!stamp.test(out)) fail(`${HTML_PATH} lacks <p class="updated"></p>`)
+  return out.replace(stamp, `$1${renderUpdated(data)}$2`)
+}
+
+// Stamp `updated` when the rows differ from the committed page: the stamp
+// says when the list last changed, not when a deploy last ran.
+function stampIfChanged(data) {
+  const committed = git(REPO, 'show', 'HEAD:projects/index.html')
+  const rows = rowsOf(renderHtml(data, readFileSync(HTML_PATH, 'utf8')))
+  const before = rowsOf(committed)
+  if (rows.length === before.length && rows.every((r, i) => r === before[i]) && data.updated) return false
+  data.updated = new Date().toISOString().replace(/\.\d+Z$/, 'Z')
+  return true
 }
 
 function render(data) {
@@ -482,6 +508,7 @@ async function checkLive(data, rows, tries) {
 async function main() {
   const data = load()
   if (cmd === 'render') {
+    if (stampIfChanged(data)) { log('updated   %s', data.updated); save(data) }
     log(render(data) ? 'rendered projects/index.html' : 'projects/index.html already current')
     return
   }
@@ -495,6 +522,7 @@ async function main() {
   if (cmd === 'scan') return
 
   for (const c of changes) c.apply()
+  if (stampIfChanged(data)) log('updated   %s', data.updated)
   save(data)
   log(render(data) ? 'rendered projects/index.html' : 'projects/index.html already current')
   if (cmd === 'deploy') await deploy(load())

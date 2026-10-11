@@ -84,7 +84,7 @@ a {
 .page {
   max-width: 920px;
   margin: 0 auto;
-  padding: 24px 16px 72px;
+  padding: 24px 16px 40px;
 }
 
 h1 {
@@ -333,6 +333,25 @@ details[open] > .rows {
 a:focus-visible {
   outline: 1px solid var(--green-dim);
   outline-offset: 2px;
+}
+
+/* --- footer ------------------------------------------------------------- */
+
+/* When the list last changed. Discreet on purpose: faint mono at the size of
+   the section labels, the exact UTC time on hover. Written by
+   scripts/projects.mjs only when the rows change. */
+.foot {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 0 16px 32px;
+}
+
+.updated {
+  margin: 0;
+  padding: 0 8px;
+  color: var(--faint);
+  font: 11px/1.4 var(--mono);
+  font-variant-numeric: tabular-nums;
 }
 
 /* --- phone -------------------------------------------------------------- */
