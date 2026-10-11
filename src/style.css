@@ -270,15 +270,218 @@ body.still .mark {
   --pulse: 1;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .logo {
-    animation: none;
+/* There was a prefers-reduced-motion block here that stopped the mark. It is
+   gone on purpose: Windows reports that setting whenever "Animation effects"
+   is off, which nobody chose on the machines this page is seen on. The toggle
+   above is the one way to stop the motion. */
+
+/* --- the jump ----------------------------------------------------------- */
+
+/* The mark is a link, and a click on it flies the page into it before the
+   link is followed. main.ts puts .jumping on the body and drives the canvas;
+   everything here is the half of it that is not WebGL, on the same clock
+   (--jump-ms) and aimed at the same point (--jx, --jy: the middle of the
+   mark, in pixels). */
+
+.jump {
+  display: block;
+  line-height: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.jump:focus-visible {
+  outline: 1px solid var(--green-dim);
+  outline-offset: 12px;
+}
+
+/* The halo that comes up behind the mark the moment it is clicked: the three
+   colours as a blurred, turning wheel. The shadows on the mark itself (below)
+   are the same colours, but a shadow of blue on near-black is nearly black,
+   and on their own they measured as a faint purple haze. This is the light;
+   they are its edge on the glyph. */
+.jump {
+  position: relative;
+  isolation: isolate;
+}
+
+.jump::before {
+  content: '';
+  position: absolute;
+  inset: -38%;
+  z-index: -1;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 210deg,
+    var(--zenon-green),
+    var(--zenon-blue),
+    var(--zenon-pink),
+    var(--zenon-green)
+  );
+  filter: blur(30px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+body.jumping .jump::before {
+  animation: jump-halo var(--jump-ms, 1300ms) linear var(--jump-delay, 0ms) both;
+  animation-play-state: var(--jump-state, running);
+}
+
+@keyframes jump-halo {
+  0% {
+    opacity: 0;
+    transform: scale(0.55) rotate(0deg);
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  20% {
+    opacity: 0.95;
+    transform: scale(1) rotate(70deg);
+    animation-timing-function: cubic-bezier(0.5, 0, 0.8, 0.4);
+  }
+  62% {
+    opacity: 1;
+    transform: scale(1.35) rotate(200deg);
+    animation-timing-function: cubic-bezier(0.7, 0, 1, 0.5);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(5) rotate(330deg);
+  }
+}
+
+/* The three brand colours, the same values the bars and streaks use. */
+:root {
+  --zenon-green: #00d557;
+  --zenon-blue: #0061eb;
+  --zenon-pink: #f91690;
+}
+
+/* Typed for the same reason --pulse is: an untyped length in a gradient stop
+   jumps instead of growing. */
+@property --flash {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+/* Everything that is not the mark or the lattice gets out of the way, fast
+   enough to be gone before the field starts to move. */
+body.jumping .github,
+body.jumping .foot,
+body.jumping .motion-toggle {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease-out;
+}
+
+/* The vignette darkens the corners, which is where the streaks end up. */
+body.jumping .vignette {
+  opacity: 0;
+  transition: opacity 0.4s ease-out;
+}
+
+/* Comes after the body.still rules so a stopped page still jumps: stopping
+   the motion stops the idle loops, and this is not one. */
+body.jumping .logo {
+  animation: none;
+  opacity: 1;
+}
+
+body.jumping .mark {
+  animation: mark-jump var(--jump-ms, 1300ms) linear var(--jump-delay, 0ms) both;
+  animation-play-state: var(--jump-state, running);
+  will-change: transform, opacity, filter;
+}
+
+/* Three beats, matching jumpScale() in bg.ts. To 20%: the glow comes up in
+   all three colours and the mark draws in slightly, as the lattice does. To
+   62%: it swells while the field accelerates. To the end: it comes at the
+   viewer and is gone, since the page is now inside it.
+
+   The glow is three stacked shadows, tight green, wider blue, widest pink, so
+   it reads as a halo with coloured bands rather than one mixed tint. */
+@keyframes mark-jump {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+    filter:
+      drop-shadow(0 0 14px rgba(0, 213, 87, 0.26))
+      drop-shadow(0 0 0 rgba(0, 97, 235, 0))
+      drop-shadow(0 0 0 rgba(249, 22, 144, 0));
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  20% {
+    transform: scale(0.93);
+    opacity: 1;
+    filter:
+      drop-shadow(0 0 10px rgba(0, 213, 87, 1))
+      drop-shadow(0 0 26px rgba(0, 97, 235, 1))
+      drop-shadow(0 0 52px rgba(249, 22, 144, 0.9));
+    animation-timing-function: cubic-bezier(0.5, 0, 0.8, 0.4);
+  }
+  62% {
+    transform: scale(1.3);
+    opacity: 1;
+    filter:
+      drop-shadow(0 0 16px rgba(0, 213, 87, 1))
+      drop-shadow(0 0 40px rgba(0, 97, 235, 1))
+      drop-shadow(0 0 80px rgba(249, 22, 144, 1));
+    animation-timing-function: cubic-bezier(0.7, 0, 1, 0.5);
+  }
+  100% {
+    transform: scale(9);
+    opacity: 0;
+    filter:
+      drop-shadow(0 0 16px rgba(0, 213, 87, 1))
+      drop-shadow(0 0 40px rgba(0, 97, 235, 1))
+      drop-shadow(0 0 80px rgba(249, 22, 144, 1));
+  }
+}
+
+/* The arrival: rings of the three colours open out of the mark and the core
+   behind them fills the screen, so the last frame is one flat colour and the
+   next page replaces a blank rather than a frozen picture. */
+.jump-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0;
+  /* Mostly core, with the colours as three narrow bands at its rim: a
+     shockwave with a coloured edge. Even bands across the whole radius drew a
+     striped ball that hid the streaks it was meant to finish. Screened over
+     the canvas for the same reason, so the streaks stay visible through the
+     bands until the core reaches them. */
+  mix-blend-mode: screen;
+  background: radial-gradient(
+    circle at var(--jx, 50%) var(--jy, 50%),
+    #e6ffec calc(var(--flash) * 0.62),
+    var(--zenon-green) calc(var(--flash) * 0.76),
+    var(--zenon-blue) calc(var(--flash) * 0.87),
+    var(--zenon-pink) calc(var(--flash) * 0.95),
+    transparent var(--flash)
+  );
+}
+
+body.jumping .jump-flash {
+  animation: jump-flash var(--jump-ms, 1300ms) linear var(--jump-delay, 0ms) both;
+  animation-play-state: var(--jump-state, running);
+}
+
+@keyframes jump-flash {
+  0%,
+  70% {
+    --flash: 0px;
+    opacity: 0;
+    animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.4);
+  }
+  76% {
     opacity: 1;
   }
-
-  .mark {
-    animation: none;
-    --pulse: 1;
-    transition: none;
+  100% {
+    --flash: 260vmax;
+    opacity: 1;
   }
 }

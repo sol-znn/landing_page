@@ -24,6 +24,7 @@ function one<T extends Element>(selector: string): T {
 const ui = {
   bg: el<HTMLCanvasElement>('bg'),
   mark: one<SVGElement>('.mark'),
+  jump: el<HTMLAnchorElement>('jump'),
   motion: el<HTMLButtonElement>('motion'),
   foot: el<HTMLElement>('foot'),
   netName: el<HTMLElement>('netName'),
@@ -83,6 +84,9 @@ async function applyMotion(reduced: boolean): Promise<void> {
     if (token !== motionToken) return
     background?.dispose()
     background = startBackground(ui.bg, { reducedMotion: reduced })
+    // A background that arrives while a jump is held (see below) has to be
+    // told, or it would draw the ordinary lattice under the held page.
+    if (heldJump !== null) setJump(heldJump)
   } catch {
     /* no background; the flat one underneath is fine */
   }
@@ -97,6 +101,99 @@ ui.motion.addEventListener('click', () => {
   }
   applyMotion(reduced)
 })
+
+// ---------------------------------------------------------------------------
+// the jump
+// ---------------------------------------------------------------------------
+
+// A plain click on the mark plays the hyperjump and then follows the link.
+// The canvas half is in bg.ts (jumpChunk), the rest is in style.css under
+// body.jumping; this is the clock both run on and the point both aim at.
+//
+// Long enough for three beats to register -- charge, launch, arrival -- and
+// short enough that it is still a click and not a wait. The stylesheet reads
+// the same number through --jump-ms, so there is one place to change it.
+const JUMP_MS = 1300
+
+let jumping = false
+
+/** Set while `?jump=<0..1>` is holding the animation at one moment. */
+let heldJump: number | null = null
+
+/** Points both halves at the middle of the mark and sets the canvas's
+ *  progress. Read fresh each time: the mark is scaling while this runs, but
+ *  about its own centre, so the point does not move. */
+function setJump(progress: number): void {
+  const rect = ui.jump.getBoundingClientRect()
+  const cx = rect.left + rect.width / 2
+  const cy = rect.top + rect.height / 2
+  document.body.style.setProperty('--jx', `${cx}px`)
+  document.body.style.setProperty('--jy', `${cy}px`)
+  background?.setJump(progress, (cx / window.innerWidth) * 2 - 1, -((cy / window.innerHeight) * 2 - 1))
+}
+
+function playJump(href: string): void {
+  if (jumping) return
+  jumping = true
+  document.body.style.setProperty('--jump-ms', `${JUMP_MS}ms`)
+  setJump(0)
+  document.body.classList.add('jumping')
+
+  const start = performance.now()
+  const step = (now: number): void => {
+    // A reset (see pageshow below) ends the loop as well as the class.
+    if (!jumping) return
+    const progress = Math.min((now - start) / JUMP_MS, 1)
+    setJump(progress)
+    if (progress < 1) {
+      requestAnimationFrame(step)
+    } else {
+      window.location.assign(href)
+    }
+  }
+  requestAnimationFrame(step)
+}
+
+function resetJump(): void {
+  jumping = false
+  document.body.classList.remove('jumping')
+  setJump(0)
+}
+
+ui.jump.addEventListener('click', (e) => {
+  // Anything other than a plain primary click is a request for the link
+  // itself -- a new tab, a new window, a download -- and gets it untouched.
+  if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+  e.preventDefault()
+  playJump(ui.jump.href)
+})
+
+// Back from the destination, the browser can restore this page exactly as it
+// was left: mid-flash, covered, with nothing to click. `persisted` is that
+// case, and the page is put back to its resting state.
+window.addEventListener('pageshow', (e) => {
+  if (e.persisted) resetJump()
+})
+
+// `?jump=0.6` holds the whole animation at that moment and never navigates,
+// so a single frame of it can be looked at or screenshotted. The CSS half is
+// held by starting its animations that far in and pausing them.
+const held = new URLSearchParams(window.location.search).get('jump')
+if (held !== null && Number.isFinite(Number(held))) {
+  heldJump = Math.min(Math.max(Number(held), 0), 1)
+  jumping = true
+  document.body.style.setProperty('--jump-ms', `${JUMP_MS}ms`)
+  document.body.style.setProperty('--jump-delay', `${-heldJump * JUMP_MS}ms`)
+  document.body.style.setProperty('--jump-state', 'paused')
+  document.body.classList.add('jumping')
+  // Nothing re-aims a held frame the way the running loop does every frame,
+  // so it is aimed again once the page has laid out, and whenever that
+  // changes. Aimed only once, here, the flash opened 75px above the mark.
+  const aim = (): void => setJump(heldJump ?? 0)
+  window.addEventListener('load', aim)
+  window.addEventListener('resize', aim)
+  aim()
+}
 
 // Motion defaults on, regardless of `prefers-reduced-motion` -- the toggle is
 // there for anyone who wants it off, but a first visit doesn't assume it.
@@ -124,9 +221,9 @@ function distanceTo(rect: DOMRect, x: number, y: number): number {
 // a pixel or two, not a generous hover zone around it.
 const FOOT_RADIUS = 10
 
-// Still wider than the footer's, because the mark is not a hit target: the
-// glyph brightens as the pointer crosses the page toward it, so the reach has
-// to be enough of the screen for that approach to register at all.
+// Much wider than the footer's, because this glow is an approach cue and not
+// the hit area: the glyph brightens as the pointer crosses the page toward
+// it, so the reach has to be enough of the screen for that to register at all.
 const MARK_RADIUS = 80
 
 /** Eases the linear 0..1 ramp so the glow comes up gently at the far edge of

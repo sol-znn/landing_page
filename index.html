@@ -13,12 +13,17 @@
 
     <main class="stage">
       <h1 class="logo">
-        <svg class="mark" viewBox="0 0 24 24" role="img" aria-label="zenoglyphs">
-          <g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="square" stroke-linejoin="miter">
-            <path d="M5.3,5.3H18.7L5.3,18.7H18.7" />
-            <path d="M9.6,9.6L14.4,14.4" />
-          </g>
-        </svg>
+        <!-- The href is where the jump lands. It is an ordinary link first, so
+             it still goes there with scripts off, from the keyboard, or in a
+             new tab; main.ts only gets in the way of a plain click. -->
+        <a id="jump" class="jump" href="https://zenoglyphs.zenon.foo" aria-label="zenoglyphs">
+          <svg class="mark" viewBox="0 0 24 24" aria-hidden="true">
+            <g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="square" stroke-linejoin="miter">
+              <path d="M5.3,5.3H18.7L5.3,18.7H18.7" />
+              <path d="M9.6,9.6L14.4,14.4" />
+            </g>
+          </svg>
+        </a>
       </h1>
       <a class="github" href="https://github.com/sol-znn" target="_blank" rel="noreferrer" aria-label="GitHub">
         <svg viewBox="0 0 16 16" aria-hidden="true">
@@ -43,6 +48,8 @@
         <span id="netTag"></span>
       </a>
     </footer>
+
+    <div class="jump-flash" aria-hidden="true"></div>
 
     <button id="motion" class="motion-toggle" type="button" aria-pressed="false" aria-label="Stop motion" title="Stop motion"></button>
 

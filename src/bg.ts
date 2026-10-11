@@ -13,6 +13,7 @@ import {
   Color,
   DoubleSide,
   Float32BufferAttribute,
+  LineSegments,
   Mesh,
   PerspectiveCamera,
   Points,
@@ -29,7 +30,48 @@ const SIDE = 180
 /** World units the lattice spans. */
 const EXTENT = 160
 
+/**
+ * The hyperjump, shared by every shader that takes part in it.
+ *
+ * Clicking the mark flies the page into it. The lattice has no depth to fly
+ * through -- it is a plane seen from above -- so the jump is done after
+ * projection instead: every vertex is pushed away from one point on screen
+ * (uJumpCenter, the middle of the mark, in NDC) by a scale that grows
+ * exponentially with uJump. Scaling about a point keeps every vertex on its
+ * own straight line through that point, which is exactly the look of stars
+ * streaming past a vanishing point, and it puts that vanishing point on the
+ * mark wherever the layout happens to have placed it.
+ *
+ * The scale dips just under 1 first: the field draws in toward the mark for
+ * a beat before it lets go, which is what makes the launch read as a launch.
+ * The per-node seed spreads the speeds out so near neighbours separate and
+ * the plane stops reading as a plane.
+ *
+ * At uJump = 0 the scale is exactly 1 and nothing here changes a pixel.
+ */
+const jumpChunk = /* glsl */ `
+  uniform float uJump;
+  uniform vec2 uJumpCenter;
+
+  float jumpSeed(vec2 xz) {
+    return fract(sin(dot(xz, vec2(12.9898, 78.233))) * 43758.5453);
+  }
+
+  float jumpScale(float t, float seed) {
+    float charge = smoothstep(0.0, 0.2, t) * (1.0 - smoothstep(0.2, 0.32, t));
+    float launch = max(t - 0.2, 0.0) / 0.8;
+    return 1.0 - 0.07 * charge + (exp(launch * 4.6) - 1.0) * 0.16 * (0.55 + seed * 0.9);
+  }
+
+  vec4 jumpWarp(vec4 clip, float t, float seed) {
+    vec2 ndc = clip.xy / clip.w;
+    vec2 warped = uJumpCenter + (ndc - uJumpCenter) * jumpScale(t, seed);
+    return vec4(warped * clip.w, clip.zw);
+  }
+`
+
 const vertexShader = /* glsl */ `
+  ${jumpChunk}
   uniform float uTime;
   uniform float uSize;
   uniform float uAmplitude;
@@ -93,10 +135,19 @@ const vertexShader = /* glsl */ `
     float mouseFalloff = 1.0 - smoothstep(0.0, 0.4, length(ndc - uMouse));
     float mouseBoost = mouseFalloff * 1.6;
 
-    float boost = 1.0 + centerBoost + mouseBoost;
-    vGlow = min(baseGlow * boost, 1.4);
+    // The jump lights the lattice around the mark as it charges, then the
+    // whole field as it goes, and fattens the dots so they read as the heads
+    // of the streaks drawn over them.
+    float launch = smoothstep(0.2, 1.0, uJump);
+    float jumpFalloff = 1.0 - smoothstep(0.0, 0.9, length(ndc - uJumpCenter));
+    float jumpBoost = smoothstep(0.0, 0.2, uJump) * (jumpFalloff * 1.3 + launch * 0.8);
 
-    gl_PointSize = uSize * (0.35 + crest * 1.55) * (0.35 + depth * 0.65) * (24.0 / -mv.z) * (1.0 + centerBoost * 0.35 + mouseBoost * 0.35);
+    float boost = 1.0 + centerBoost + mouseBoost + jumpBoost;
+    vGlow = min(baseGlow * boost, 1.4 + launch);
+
+    gl_PointSize = uSize * (0.35 + crest * 1.55) * (0.35 + depth * 0.65) * (24.0 / -mv.z) * (1.0 + centerBoost * 0.35 + mouseBoost * 0.35) * (1.0 + launch * 1.2);
+
+    gl_Position = jumpWarp(gl_Position, uJump, jumpSeed(position.xz));
   }
 `
 
@@ -120,7 +171,7 @@ const fragmentShader = /* glsl */ `
 /** How many light-links exist at once. Each fires, pauses, and fires again. */
 const LINK_COUNT = 8
 
-/** The brand tri-color, from `docs/frontend/zenon-design-system.md`: Zenon
+/** The brand tri-color, from `zenon-docs/frontend/design-system.md`: Zenon
  *  green, Quasar blue (ZNN's sister token), and the reserved Plasma pink
  *  accent. Each bar picks one at random when it's built, weighted by
  *  LINK_SPAWN_WEIGHTS below rather than drawn uniformly. */
@@ -179,6 +230,7 @@ const LINK_BRIGHTNESS = [1, 1.75, 1.9]
  */
 const linkVertexShader = /* glsl */ `
   uniform float uTime;
+  uniform float uJump;
   attribute vec3 aOffset;
   attribute vec3 aColor;
   attribute float aT;
@@ -216,7 +268,9 @@ const linkVertexShader = /* glsl */ `
     if (phase < window) {
       glow = smoothstep(0.0, edge, rel) - smoothstep(barLength, barLength + edge, rel);
     }
-    vGlow = glow;
+    // A bar is one continuous ribbon and cannot follow nodes that are flying
+    // apart at different speeds, so it is gone before they start to.
+    vGlow = glow * (1.0 - smoothstep(0.1, 0.3, uJump));
   }
 `
 
@@ -295,6 +349,7 @@ function buildLinks(): Mesh {
   const material = new ShaderMaterial({
     uniforms: {
       uTime: { value: 0 },
+      uJump: { value: 0 },
     },
     vertexShader: linkVertexShader,
     fragmentShader: linkFragmentShader,
@@ -307,14 +362,118 @@ function buildLinks(): Mesh {
   return new Mesh(geometry, material)
 }
 
+/** Share of lattice nodes that trail a streak during the jump. All 32,400
+ *  at once sum to white under additive blending and the three colours are
+ *  lost; about a third keeps them apart. */
+const STREAK_SHARE = 0.36
+
+/**
+ * The streaks: one line per chosen node, from where the node was a moment ago
+ * to where it is now. Both ends sit on the node's own (x, z) and run the
+ * lattice's wave and the same jumpWarp, the tail a fixed step of uJump behind
+ * the head -- so a streak has no length until the field accelerates, and gets
+ * longer the faster its node is going, without any length being set here.
+ *
+ * Each takes one of the three brand colours, in even thirds. The weighting
+ * the bars need (LINK_SPAWN_WEIGHTS) is for a green bar over green dots; here
+ * all three are on screen together in their thousands and an even split is
+ * what reads as three colours.
+ */
+const streakVertexShader = /* glsl */ `
+  ${jumpChunk}
+  uniform float uTime;
+  uniform float uAmplitude;
+  attribute vec3 aColor;
+  attribute float aEnd;
+  varying float vAlpha;
+  varying vec3 vColor;
+
+  void main() {
+    vColor = aColor;
+    vec3 p = position;
+
+    float a = sin(p.x * 0.075 + uTime * 1.1);
+    float b = sin(p.z * 0.061 - uTime * 0.85);
+    float c = sin((p.x + p.z) * 0.026 + uTime * 0.5);
+    p.y += (a * 0.55 + b * 0.5 + c * 0.9) * uAmplitude * 6.5;
+
+    vec4 mv = modelViewMatrix * vec4(p, 1.0);
+    float t = aEnd > 0.5 ? uJump : max(uJump - 0.11, 0.0);
+    gl_Position = jumpWarp(projectionMatrix * mv, t, jumpSeed(position.xz));
+
+    // Bright at the head, nothing at the tail, and not drawn at all until the
+    // charge is over: during it the two ends are a pixel apart.
+    float depth = 0.3 + 0.7 * (1.0 - smoothstep(30.0, 170.0, -mv.z));
+    vAlpha = aEnd * smoothstep(0.22, 0.4, uJump) * depth * 0.85;
+  }
+`
+
+const streakFragmentShader = /* glsl */ `
+  varying float vAlpha;
+  varying vec3 vColor;
+
+  void main() {
+    if (vAlpha < 0.004) discard;
+    gl_FragColor = vec4(vColor, vAlpha);
+  }
+`
+
+function buildStreaks(): LineSegments {
+  const palette = LINK_COLORS.map((hex, i) => new Color(hex).multiplyScalar(LINK_BRIGHTNESS[i]))
+  const positions: number[] = []
+  const colors: number[] = []
+  const ends: number[] = []
+
+  for (let ix = 0; ix < SIDE; ix++) {
+    for (let iz = 0; iz < SIDE; iz++) {
+      if (Math.random() > STREAK_SHARE) continue
+      const x = (ix / (SIDE - 1) - 0.5) * EXTENT
+      const z = (iz / (SIDE - 1) - 0.5) * EXTENT
+      const color = palette[Math.floor(Math.random() * palette.length)]
+      positions.push(x, 0, z, x, 0, z)
+      colors.push(color.r, color.g, color.b, color.r, color.g, color.b)
+      ends.push(0, 1)
+    }
+  }
+
+  const geometry = new BufferGeometry()
+  geometry.setAttribute('position', new Float32BufferAttribute(positions, 3))
+  geometry.setAttribute('aColor', new Float32BufferAttribute(colors, 3))
+  geometry.setAttribute('aEnd', new Float32BufferAttribute(ends, 1))
+
+  const material = new ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uAmplitude: { value: 0 },
+      uJump: { value: 0 },
+      uJumpCenter: { value: new Vector2(0, 0) },
+    },
+    vertexShader: streakVertexShader,
+    fragmentShader: streakFragmentShader,
+    transparent: true,
+    depthWrite: false,
+    blending: AdditiveBlending,
+  })
+
+  const streaks = new LineSegments(geometry, material)
+  // The warp moves vertices after projection, so three's bounding-sphere test
+  // would cull against where they are not.
+  streaks.frustumCulled = false
+  streaks.visible = false
+  return streaks
+}
+
 export interface Background {
   dispose(): void
+  /** Sets the hyperjump: `progress` 0..1, toward (x, y) in NDC. 0 is the
+   *  ordinary background. The caller owns the clock, so the page's own
+   *  animation and this one run off a single timeline. */
+  setJump(progress: number, x: number, y: number): void
 }
 
 export interface BackgroundOptions {
-  /** Overrides `prefers-reduced-motion`. `true` freezes the background to a
-   *  single still frame; `false` runs the full animation. Lets a page-level
-   *  toggle force either state regardless of the OS setting. */
+  /** `true` freezes the background to a single still frame; `false`, the
+   *  default, runs the full animation. Set by the page's own toggle. */
   reducedMotion?: boolean
 }
 
@@ -363,6 +522,8 @@ export function startBackground(canvas: HTMLCanvasElement, opts: BackgroundOptio
       // point on screen, so the spotlight is invisible until the first move.
       uMouse: { value: new Vector2(10, 10) },
       uColor: { value: new Color(0x67e646) },
+      uJump: { value: 0 },
+      uJumpCenter: { value: new Vector2(0, 0) },
     },
     vertexShader,
     fragmentShader,
@@ -372,9 +533,19 @@ export function startBackground(canvas: HTMLCanvasElement, opts: BackgroundOptio
   })
 
   const lattice = new Points(geometry, material)
+  // Same reason as the streaks: the jump moves points after projection.
+  lattice.frustumCulled = false
   scene.add(lattice)
 
-  const reducedMotion = opts.reducedMotion ?? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const streaks = buildStreaks()
+  scene.add(streaks)
+  const streakMaterial = streaks.material as ShaderMaterial
+
+  // This used to fall back to matchMedia('(prefers-reduced-motion: reduce)').
+  // Removed: Windows reports that whenever "Animation effects" is off, which
+  // nobody chose on the machines this is seen on, and it left the page still.
+  // The toggle on the page is the only thing that stops the motion.
+  const reducedMotion = opts.reducedMotion ?? false
 
   const resize = (redraw: boolean): void => {
     const width = canvas.clientWidth || window.innerWidth
@@ -425,12 +596,26 @@ export function startBackground(canvas: HTMLCanvasElement, opts: BackgroundOptio
     window.addEventListener('pointermove', move)
     document.documentElement.addEventListener('pointerleave', leave)
     return {
+      // The jump plays even here. Stopping the background stops the idle
+      // loop; a click on the mark is a request for this one animation, and
+      // each call draws the single frame it asks for, since nothing else
+      // will.
+      setJump(progress: number, x: number, y: number): void {
+        material.uniforms.uJump.value = progress
+        material.uniforms.uJumpCenter.value.set(x, y)
+        streakMaterial.uniforms.uJump.value = progress
+        streakMaterial.uniforms.uJumpCenter.value.set(x, y)
+        streaks.visible = progress > 0
+        renderer.render(scene, camera)
+      },
       dispose(): void {
         window.removeEventListener('resize', onResize)
         window.removeEventListener('pointermove', move)
         document.documentElement.removeEventListener('pointerleave', leave)
         geometry.dispose()
         material.dispose()
+        streaks.geometry.dispose()
+        streakMaterial.dispose()
         renderer.dispose()
       },
     }
@@ -451,6 +636,7 @@ export function startBackground(canvas: HTMLCanvasElement, opts: BackgroundOptio
 
   const speed = 0.6
   material.uniforms.uAmplitude.value = 0.8
+  streakMaterial.uniforms.uAmplitude.value = 0.8
   let frame = 0
   let running = true
   const start = performance.now()
@@ -468,6 +654,10 @@ export function startBackground(canvas: HTMLCanvasElement, opts: BackgroundOptio
     lattice.rotation.y = t * 0.055
     linkMaterial.uniforms.uTime.value = t
     links.rotation.y = lattice.rotation.y
+    // The streaks ride the same wave and the same turn, or their heads would
+    // not sit on the dots they trail.
+    streakMaterial.uniforms.uTime.value = t
+    streaks.rotation.y = lattice.rotation.y
     renderer.render(scene, camera)
   }
 
@@ -486,9 +676,19 @@ export function startBackground(canvas: HTMLCanvasElement, opts: BackgroundOptio
   document.addEventListener('visibilitychange', onVisibility)
 
   return {
+    setJump(progress: number, x: number, y: number): void {
+      material.uniforms.uJump.value = progress
+      material.uniforms.uJumpCenter.value.set(x, y)
+      streakMaterial.uniforms.uJump.value = progress
+      streakMaterial.uniforms.uJumpCenter.value.set(x, y)
+      linkMaterial.uniforms.uJump.value = progress
+      streaks.visible = progress > 0
+    },
     dispose(): void {
       running = false
       cancelAnimationFrame(frame)
+      streaks.geometry.dispose()
+      streakMaterial.dispose()
       window.removeEventListener('resize', onResize)
       window.removeEventListener('pointermove', move)
       document.documentElement.removeEventListener('pointerleave', leave)
