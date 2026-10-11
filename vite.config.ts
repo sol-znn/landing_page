@@ -21,6 +21,9 @@ export default defineConfig(({ mode }) => {
     build: {
       target: 'es2022',
       rollupOptions: {
+        // Two pages. Vite only builds index.html unless told about the rest,
+        // and the projects index would be missing from dist with no error.
+        input: { main: 'index.html', projects: 'projects/index.html' },
         output: {
           // three.js is ~500kB and the page's own code is a few hundred lines;
           // splitting them means a cached renderer survives a copy change.

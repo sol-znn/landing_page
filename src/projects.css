@@ -1,0 +1,297 @@
+/* The projects index. A plain page: no canvas and no script, because it is a
+   list to be read and the landing page is the one that performs. Same palette
+   and the same two type stacks as style.css, restated rather than imported,
+   since that file also lays out a one-screen grid this page must not inherit. */
+:root {
+  --bg: #0d0d0d;
+  --card: #141414;
+  --line: #262626;
+  --green: #67e646;
+  --green-dim: #40bf21;
+  --text: #ededed;
+  --muted: #8a8a8a;
+  --faint: #5a5a5a;
+  --zenon-blue: #4d94ff;
+  --amber: #e0a23a;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.5 ui-sans-serif, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+}
+
+/* --- header ------------------------------------------------------------- */
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 12px 16px 0;
+}
+
+/* 44px boxes around a 24px mark and a short word: the hit area is the box. */
+.home,
+.toplink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.15s cubic-bezier(0.4, 0, 0.2, 1), filter 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.home {
+  color: var(--green);
+}
+
+.home svg {
+  width: 26px;
+  height: 26px;
+}
+
+.toplink {
+  justify-content: flex-end;
+  font-size: 13px;
+}
+
+.home:hover,
+.home:focus-visible {
+  filter: drop-shadow(0 0 8px rgba(103, 230, 70, 0.6));
+}
+
+.toplink:hover,
+.toplink:focus-visible {
+  color: var(--green);
+}
+
+/* --- page --------------------------------------------------------------- */
+
+.page {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 24px 16px 72px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.intro {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
+section {
+  margin-top: 36px;
+  /* Sections arrive one after another. Always: there is no reduced-motion
+     rule on this site, on purpose (see style.css). */
+  animation: arrive 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+section:nth-of-type(2) { animation-delay: 60ms; }
+section:nth-of-type(3) { animation-delay: 120ms; }
+section:nth-of-type(4) { animation-delay: 180ms; }
+section:nth-of-type(5) { animation-delay: 240ms; }
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* The ledger label from the design system: mono, uppercase, 11px, tracked.
+   For labels only. */
+h2 {
+  margin: 0 0 8px;
+  color: var(--faint);
+  font: 500 11px/1.4 var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+
+/* Four columns on a wide screen: name, what it is, status, links. */
+.row {
+  display: grid;
+  grid-template-columns: 170px 1fr 104px 190px;
+  align-items: center;
+  gap: 16px;
+  min-height: 48px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+  transition: background 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.row:hover {
+  background: var(--card);
+}
+
+.name {
+  font-weight: 500;
+}
+
+/* A version is data, so it is mono with tabular figures, and quiet: it sits
+   beside the name without competing with it. Only where the project has one
+   (a tag or a package version); a row without a number has none to show. */
+.ver {
+  margin-left: 6px;
+  color: var(--faint);
+  font: 400 11px/1 var(--mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.what {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* A status is a shape and a word, never the colour alone. One word per
+   state, from this set: Live, Devnet, In review, Active, Prototype, Research,
+   Stable, Deprecated. Filled means it runs somewhere you can reach; a ring means it is
+   being worked on; a bar means it is on paper. */
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  font: 12px/1 var(--mono);
+  white-space: nowrap;
+}
+
+.status::before {
+  content: '';
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid var(--mark, var(--muted));
+  transition: box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* The row's own icon lights up with the row, in its own colour, whatever the
+   status. Two shadows: a tight one that reads as the icon brightening and a
+   wider one that reads as light. :focus-within is the keyboard's hover, since
+   the row's links are what take focus.
+
+   Listed after the Live rule below would lose to it, so this carries the
+   extra class to win: a Live icon already glows a little at rest and has to
+   glow more here, like the others. */
+.row:hover .status[data-s]::before,
+.row:focus-within .status[data-s]::before {
+  box-shadow:
+    0 0 5px var(--mark, var(--muted)),
+    0 0 14px var(--mark, var(--muted));
+}
+
+.status[data-s='live'] { --mark: var(--green); }
+.status[data-s='live']::before { background: var(--mark); box-shadow: 0 0 8px rgba(103, 230, 70, 0.6); }
+.status[data-s='devnet'] { --mark: var(--zenon-blue); }
+.status[data-s='devnet']::before { background: var(--mark); }
+.status[data-s='stable'] { --mark: var(--muted); }
+.status[data-s='stable']::before { background: var(--mark); }
+.status[data-s='review'] { --mark: var(--zenon-blue); }
+.status[data-s='active'] { --mark: var(--green); }
+.status[data-s='prototype'] { --mark: var(--amber); }
+.status[data-s='research'] { --mark: var(--muted); }
+.status[data-s='research']::before { height: 2px; border-radius: 1px; border-width: 1px; }
+/* Deprecated is the one state that is over: a broken ring, and the word
+   itself goes quiet, so the row reads as set aside before it is read. */
+.status[data-s='deprecated'] { --mark: var(--faint); color: var(--muted); }
+.status[data-s='deprecated']::before { border-style: dotted; }
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  font: 12px/1 var(--mono);
+  text-decoration: none;
+  transition: color 0.15s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.links a:hover,
+.links a:focus-visible {
+  color: var(--green);
+  border-color: var(--green-dim);
+}
+
+a:focus-visible {
+  outline: 1px solid var(--green-dim);
+  outline-offset: 2px;
+}
+
+/* --- phone -------------------------------------------------------------- */
+
+/* One breakpoint. Below it a row is a card: name and status on the first
+   line, the sentence under them, links last and left-aligned, 44px tall. */
+@media (max-width: 700px) {
+  .rows {
+    border-top: 0;
+    display: grid;
+    gap: 10px;
+  }
+
+  .row {
+    grid-template-columns: 1fr auto;
+    gap: 6px 12px;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+  }
+
+  .what {
+    grid-column: 1 / -1;
+  }
+
+  .links {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .links:empty {
+    display: none;
+  }
+
+  .links a {
+    min-height: 44px;
+    padding: 0 14px;
+  }
+}

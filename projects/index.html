@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Projects · zenon.foo</title>
+    <meta name="description" content="What I'm building on Zenon, and where each project stands." />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' fill='%23141414'/><g fill='none' stroke='%2367E646' stroke-width='2.6' stroke-linecap='square' stroke-linejoin='miter'><path d='M5.3,5.3H18.7L5.3,18.7H18.7'/><path d='M9.6,9.6L14.4,14.4'/></g></svg>" />
+    <link rel="stylesheet" href="/src/projects.css" />
+  </head>
+  <body>
+    <!-- Hand-written, on purpose: about thirty rows that change a few times a
+         month do not need a data file, a template and a script to join them.
+         A row is: name, one line, status, links. The status words are a fixed
+         set (see projects.css); use one of them rather than a new one. -->
+    <header class="top">
+      <a class="home" href="/" aria-label="zenon.foo">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="square" stroke-linejoin="miter">
+            <path d="M5.3,5.3H18.7L5.3,18.7H18.7" />
+            <path d="M9.6,9.6L14.4,14.4" />
+          </g>
+        </svg>
+      </a>
+      <a class="toplink" href="https://github.com/sol-znn">GitHub</a>
+    </header>
+
+    <main class="page">
+      <h1>Projects</h1>
+      <p class="intro">What I'm building on Zenon. Status is approximate.</p>
+
+      <section>
+        <h2>Protocol</h2>
+        <ul class="rows">
+          <li class="row">
+            <span class="name">PTLC</span>
+            <span class="what">Point time locked contracts for go-zenon</span>
+            <span class="status" data-s="review">In review</span>
+            <span class="links">
+              <a href="https://github.com/zenon-network/go-zenon/pull/138">PR 138</a>
+              <a href="https://ptlc.zenon.foo/">Console</a>
+              <a href="https://github.com/sol-znn/ptlc-console">Repo</a>
+            </span>
+          </li>
+          <li class="row">
+            <span class="name">Pillar transfer <span class="ver">0.1.0</span></span>
+            <span class="what">Sell a Pillar to a named buyer against a secret</span>
+            <span class="status" data-s="prototype">Prototype</span>
+            <span class="links">
+              <a href="https://pillar.zenon.foo/">Console</a>
+              <a href="https://github.com/sol-znn/pillar-transfer-console">Repo</a>
+            </span>
+          </li>
+          <li class="row">
+            <span class="name">Syrius extension <span class="ver">0.4.0</span></span>
+            <span class="what">Browser wallet for Zenon and EVM chains</span>
+            <span class="status" data-s="active">Active</span>
+            <span class="links">
+              <a href="https://github.com/sol-znn/syrius-extension">Repo</a>
+            </span>
+          </li>
+          <li class="row">
+            <span class="name">go-zenon fuzz</span>
+            <span class="what">Fuzzing the node's parsers, RPC and block pipeline</span>
+            <span class="status" data-s="active">Active</span>
+            <span class="links">
+              <a href="https://github.com/sol-znn/go-zenon-fuzz">Repo</a>
+            </span>
+          </li>
+          <li class="row">
+            <span class="name">Phase 1 roadmap</span>
+            <span class="what">A community plan for Phase 1, on one page</span>
+            <span class="status" data-s="live">Live</span>
+            <span class="links">
+              <a href="https://sol-znn.github.io/zenon-roadmap/">Site</a>
+              <a href="https://github.com/sol-znn/zenon-roadmap">Repo</a>
+            </span>
+          </li>
+          <li class="row">
+            <span class="name">zenon.zip</span>
+            <span class="what">Zenon Improvement Proposals, published on Nostr</span>
+            <span class="status" data-s="live">Live</span>
+            <span class="links">
+              <a href="https://zenon.zip/">Site</a>
+            </span>
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Swaps and tokens</h2>
+        <ul class="rows">
+          <li class="row">
+            <span class="name">Ferry <span class="ver">0.1.1</span></span>
+            <span class="what">Atomic swaps between Bitcoin, Zenon and Solana</span>
+            <span class="status" data-s="live">Live</span>
+            <span class="links">
+              <a href="https://ferry.zenon.foo/">Site</a>
+              <a href="https://github.com/sol-znn/ferry-web">Repo</a>
+            </span>
+          </li>
+          <li class="row">
+            <span class="name">Zenoglyphs faucet <span class="ver">0.1.0</span></span>
+            <span class="what">Claim GLYPHS by locking PlasmaPoints</span>
+            <span class="status" data-s="live">Live</span>
+            <span class="links">
+              <a href="https://zenoglyphs.zenon.foo/">Site</a>
+              <a href="https://github.com/sol-znn/zenon-faucet">Repo</a>
+            </span>
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>ZVM devnet</h2>
+        <ul class="rows">
+          <li class="row">
+            <span class="name">Devnet</span>
+            <span class="what">An EVM rollup on its own Zenon chain</span>
+            <span class="status" data-s="devnet">Devnet</span>
+            <span class="links">
+              <a href="https://devnet.zenon.foo/">Site</a>
+              <a href="https://devnet.zenon.foo/status/">Status</a>
+            </span>
+          </li>
+          <li class="row">
+            <span class="name">Explorer <span class="ver">0.1.0</span></span>
+            <span class="what">Blocks, transactions and accounts</span>
+            <span class="status" data-s="devnet">Devnet</span>
+            <span class="links"><a href="https://devnet.zenon.foo/explorer/">Site</a></span>
+          </li>
+          <li class="row">
+            <span class="name">Glyphswap <span class="ver">0.1.0</span></span>
+            <span class="what">Token swaps and pools</span>
+            <span class="status" data-s="devnet">Devnet</span>
+            <span class="links"><a href="https://devnet.zenon.foo/glyphswap/">Site</a></span>
+          </li>
+          <li class="row">
+            <span class="name">Karum <span class="ver">0.1.0</span></span>
+            <span class="what">NFT market</span>
+            <span class="status" data-s="devnet">Devnet</span>
+            <span class="links"><a href="https://devnet.zenon.foo/karum/">Site</a></span>
+          </li>
+          <li class="row">
+            <span class="name">Spark <span class="ver">0.1.0</span></span>
+            <span class="what">Token launchpad</span>
+            <span class="status" data-s="devnet">Devnet</span>
+            <span class="links"><a href="https://devnet.zenon.foo/spark/">Site</a></span>
+          </li>
+          <li class="row">
+            <span class="name">ZNS <span class="ver">0.1.0</span></span>
+            <span class="what">.znn names</span>
+            <span class="status" data-s="devnet">Devnet</span>
+            <span class="links"><a href="https://devnet.zenon.foo/zns/">Site</a></span>
+          </li>
+          <li class="row">
+            <span class="name">Mozaic <span class="ver">0.1.0</span></span>
+            <span class="what">A shared pixel canvas</span>
+            <span class="status" data-s="devnet">Devnet</span>
+            <span class="links"><a href="https://devnet.zenon.foo/mozaic/">Site</a></span>
+          </li>
+          <li class="row">
+            <span class="name">zchan <span class="ver">0.1.0</span></span>
+            <span class="what">An image board kept in one contract's logs</span>
+            <span class="status" data-s="devnet">Devnet</span>
+            <span class="links"><a href="https://devnet.zenon.foo/zchan/">Site</a></span>
+          </li>
+          <li class="row">
+            <span class="name">Bullet Game <span class="ver">0.1.0</span></span>
+            <span class="what">A Telegram game with an on-chain escrow</span>
+            <span class="status" data-s="devnet">Devnet</span>
+            <span class="links"><a href="https://devnet.zenon.foo/bullet/">Site</a></span>
+          </li>
+          <li class="row">
+            <span class="name">Rain <span class="ver">0.1.0</span></span>
+            <span class="what">A Telegram bot that splits tokens across a group</span>
+            <span class="status" data-s="devnet">Devnet</span>
+            <span class="links"><a href="https://devnet.zenon.foo/rain/">Site</a></span>
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Tools</h2>
+        <ul class="rows">
+          <li class="row">
+            <span class="name">zts-airdrop <span class="ver">0.1.0</span></span>
+            <span class="what">Send a token to every address active in a range of momentums</span>
+            <span class="status" data-s="stable">Stable</span>
+            <span class="links"><a href="https://github.com/sol-znn/zts-airdrop">Repo</a></span>
+          </li>
+          <li class="row">
+            <span class="name">vanity-zts <span class="ver">1.0.0</span></span>
+            <span class="what">Mine a token address with a chosen prefix</span>
+            <span class="status" data-s="stable">Stable</span>
+            <span class="links"><a href="https://github.com/sol-znn/vanity-zts">Repo</a></span>
+          </li>
+          <li class="row">
+            <span class="name">Address generator <span class="ver">1.0.0</span></span>
+            <span class="what">Vanity Zenon addresses, on the CPU or the GPU</span>
+            <span class="status" data-s="stable">Stable</span>
+            <span class="links">
+              <a href="https://github.com/sol-znn/znn-address-generator-go">Go</a>
+              <a href="https://github.com/sol-znn/znn-address-generator-cuda">CUDA</a>
+            </span>
+          </li>
+          <li class="row">
+            <span class="name">zenon.foo <span class="ver">0.1.0</span></span>
+            <span class="what">This site</span>
+            <span class="status" data-s="live">Live</span>
+            <span class="links"><a href="https://github.com/sol-znn/landing_page">Repo</a></span>
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Not public yet</h2>
+        <ul class="rows">
+          <li class="row">
+            <span class="name">ZVM</span>
+            <span class="what">The rollup behind the devnet: node, relayer, bridge</span>
+            <span class="status" data-s="devnet">Devnet</span>
+            <span class="links"></span>
+          </li>
+          <li class="row">
+            <span class="name">Sentinels</span>
+            <span class="what">Audited archival nodes that also relay proof-of-work</span>
+            <span class="status" data-s="prototype">Prototype</span>
+            <span class="links"><a href="https://sentinel.zenon.foo/poc">Demo</a></span>
+          </li>
+          <li class="row">
+            <span class="name">zBTC</span>
+            <span class="what">A Bitcoin peg for Zenon</span>
+            <span class="status" data-s="prototype">Prototype</span>
+            <span class="links"></span>
+          </li>
+          <li class="row">
+            <span class="name">Fast finality</span>
+            <span class="what">Momentum finality from producer attestations</span>
+            <span class="status" data-s="research">Research</span>
+            <span class="links"></span>
+          </li>
+          <li class="row">
+            <span class="name">Fast sync</span>
+            <span class="what">Sync a new node in minutes from a state snapshot</span>
+            <span class="status" data-s="research">Research</span>
+            <span class="links"></span>
+          </li>
+          <li class="row">
+            <span class="name">Zenon Evolution</span>
+            <span class="what">A redesign study for Network of Momentum</span>
+            <span class="status" data-s="research">Research</span>
+            <span class="links"></span>
+          </li>
+          <li class="row">
+            <span class="name">Kanban</span>
+            <span class="what">Phase 1 as epics, each fact with its evidence</span>
+            <span class="status" data-s="research">Research</span>
+            <span class="links"></span>
+          </li>
+          <li class="row">
+            <span class="name">Emissions</span>
+            <span class="what">Fund Accelerator-Z from existing emission</span>
+            <span class="status" data-s="research">Research</span>
+            <span class="links"></span>
+          </li>
+          <li class="row">
+            <span class="name">Governance</span>
+            <span class="what">Voting rules measured against the real electorate</span>
+            <span class="status" data-s="research">Research</span>
+            <span class="links"></span>
+          </li>
+          <li class="row">
+            <span class="name">Zenoglyphs</span>
+            <span class="what">Inscriptions carried in ordinary account blocks</span>
+            <span class="status" data-s="deprecated">Deprecated</span>
+            <span class="links"></span>
+          </li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

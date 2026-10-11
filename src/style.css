@@ -70,10 +70,39 @@ body {
    link and its hover state should mean "you are on the target."
    flex:none plus the auto top margin above keeps it pinned to the bottom of
    .stage regardless of how much room .logo's own centering leaves. */
-.github {
+/* The way to the projects index: the one word on the page above the footer.
+   It takes the auto margin that used to be the icon's, so the pair sits at
+   the bottom of .stage together, and it is padded out to a 44px target. */
+.projects {
   flex: none;
   margin-top: auto;
-  padding-top: 24px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  color: var(--muted);
+  font: 11px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: color 0.15s ease-out, filter 0.15s ease-out;
+}
+
+.projects:hover,
+.projects:focus-visible {
+  color: var(--green);
+  filter: drop-shadow(0 0 8px rgba(103, 230, 70, 0.55));
+}
+
+body.jumping .projects {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease-out;
+}
+
+.github {
+  flex: none;
+  padding-top: 4px;
   color: var(--muted);
   line-height: 0;
   transition: color 0.15s ease-out, filter 0.15s ease-out;

@@ -42,7 +42,7 @@ frame -- a choice that persists in `localStorage`.
 
 ## The jump
 
-The mark is a link to `https://zenoglyphs.zenon.foo` (the `href` on `#jump` in
+The mark is a link to `https://devnet.zenon.foo` (the `href` on `#jump` in
 `index.html`; change it there). A plain click plays a 1.3 s hyperjump into the
 mark and then follows the link. Any other click, a new tab, or scripts off,
 gets the link as it is.
@@ -61,6 +61,14 @@ button resets the page.
 
 `?jump=0.6` holds the animation at that fraction and never navigates, for
 looking at one frame of it.
+
+## The projects index
+
+`projects/index.html`, served at `/projects/` and linked from the word above the
+GitHub icon. A hand-written list of projects with a one-line description, a
+status and links, styled by `src/projects.css`, with no script. Statuses come
+from a fixed set of eight words listed in that stylesheet. It is a second entry
+in `vite.config.ts`; a page not listed there is left out of `dist/` silently.
 
 ## Running it
 
