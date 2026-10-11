@@ -113,7 +113,7 @@
         },
         {
           "name": "rust-zenon",
-          "what": "A modern Zenon node in Rust, built for speed, safety and client diversity",
+          "what": "A modular Zenon client in Rust, built for speed, safety and node diversity",
           "status": "research",
           "dirs": ["rust-zenon"],
           "links": []
@@ -320,5 +320,5 @@
       ]
     }
   ],
-  "updated": "2026-10-11T20:07:21Z"
+  "updated": "2026-10-11T20:11:50Z"
 }
