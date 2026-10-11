@@ -100,7 +100,7 @@ h1 {
 }
 
 section {
-  margin-top: 36px;
+  margin-top: 0;
   /* Sections arrive one after another. Always: there is no reduced-motion
      rule on this site, on purpose (see style.css). */
   animation: arrive 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) both;
@@ -121,11 +121,90 @@ section:nth-of-type(5) { animation-delay: 240ms; }
 /* The ledger label from the design system: mono, uppercase, 11px, tracked.
    For labels only. */
 h2 {
-  margin: 0 0 8px;
-  color: var(--faint);
+  margin: 0;
   font: 500 11px/1.4 var(--mono);
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+/* Each section is a drop-down, closed by default. The summary is the whole
+   48px bar, so the hit area is the line rather than the word, and it carries
+   the row count, so a closed section still says how much is in it. A closed
+   label is the only thing on the page at first, so it is muted, not faint. */
+/* One line between neighbouring bars: each section draws the line above it,
+   the last also the one below, and an open section's last row gives up its
+   own so the next bar's line is the only one. */
+.page details {
+  border-top: 1px solid var(--line);
+}
+
+.page section:first-of-type {
+  margin-top: 24px;
+}
+
+.page section:last-of-type details {
+  border-bottom: 1px solid var(--line);
+}
+
+details > .rows > .row:last-child {
+  border-bottom: 0;
+}
+
+summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 8px;
+  color: var(--muted);
+  cursor: pointer;
+  list-style: none;
+  transition: color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
+
+/* A chevron drawn from two borders, pointing right when closed and down
+   when open. */
+summary::before {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.2s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+details[open] > summary::before {
+  transform: rotate(45deg);
+}
+
+summary:hover,
+summary:focus-visible,
+details[open] > summary {
+  color: var(--text);
+}
+
+summary:focus-visible {
+  outline: 1px solid var(--green-dim);
+  outline-offset: 2px;
+}
+
+.count {
+  margin-left: auto;
+  color: var(--faint);
+  font: 12px/1 var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Rows arrive as the section opens. Always: no reduced-motion rule here. */
+details[open] > .rows {
+  margin-bottom: 16px;
+  animation: arrive 0.3s cubic-bezier(0.2, 0.7, 0.3, 1) both;
 }
 
 .rows {
@@ -274,6 +353,10 @@ a:focus-visible {
     border: 1px solid var(--line);
     border-radius: 10px;
     background: var(--card);
+  }
+
+  details > .rows > .row:last-child {
+    border-bottom: 1px solid var(--line);
   }
 
   .what {

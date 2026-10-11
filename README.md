@@ -66,7 +66,8 @@ looking at one frame of it.
 
 `projects/index.html`, served at `/projects/` and linked from the word above the
 GitHub icon. Its rows are generated from `projects/projects.json` by
-`scripts/projects.mjs`; the page itself has no script. Statuses come from a fixed
+`scripts/projects.mjs`; the page itself has no script. Each section is a
+`<details>`, closed by default, with its row count on the bar. Statuses come from a fixed
 set of eight words listed in `src/projects.css`. It is a second entry in
 `vite.config.ts`; a page not listed there is left out of `dist/` silently.
 

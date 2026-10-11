@@ -249,7 +249,14 @@ const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
 function renderRows(data) {
   const out = []
   for (const s of data.sections) {
-    out.push('      <section>', `        <h2>${esc(s.title)}</h2>`, '        <ul class="rows">')
+    // A <details> per section, closed: the page opens as a list of four
+    // headings, and the browser does the opening without a script.
+    out.push(
+      '      <section>',
+      '        <details>',
+      `          <summary><h2>${esc(s.title)}</h2><span class="count">${s.projects.length}</span></summary>`,
+      '        <ul class="rows">',
+    )
     for (const p of s.projects) {
       const ver = p.ver ? ` <span class="ver">${esc(p.ver)}</span>` : ''
       out.push(
@@ -267,7 +274,7 @@ function renderRows(data) {
       }
       out.push('          </li>')
     }
-    out.push('        </ul>', '      </section>')
+    out.push('        </ul>', '        </details>', '      </section>')
   }
   return out
 }
