@@ -20,7 +20,7 @@
   ],
   "ignore": {
     "webdesign-lab": "not a Zenon project",
-    "zenon-docs": "reference material, not a project",
+    "zips": "zenon.zip, taken off the page by the owner",
     "znn-bruteforce-cuda": "treasure hunt tooling, kept off the page",
     "znn-bruteforce-go": "treasure hunt tooling, kept off the page",
     "znn-treasure": "private"
@@ -61,13 +61,6 @@
             ["Site", "https://sol-znn.github.io/zenon-roadmap/"],
             ["Repo", "https://github.com/sol-znn/zenon-roadmap"]
           ]
-        },
-        {
-          "name": "zenon.zip",
-          "what": "Zenon Improvement Proposals, published on Nostr",
-          "status": "live",
-          "dirs": ["zips"],
-          "links": [["Site", "https://zenon.zip/"]]
         },
         {
           "name": "Sentinels",
@@ -120,7 +113,7 @@
         },
         {
           "name": "rust-zenon",
-          "what": "A Rust node that matches go-zenon byte for byte",
+          "what": "A second Zenon client in Rust, with the conformance tests and RPC spec Zenon never had",
           "status": "research",
           "dirs": ["rust-zenon"],
           "links": []
@@ -256,6 +249,14 @@
       "title": "Tools",
       "projects": [
         {
+          "name": "zenon.foo",
+          "ver": "0.1.0",
+          "what": "This site",
+          "status": "live",
+          "dirs": ["landing_page"],
+          "links": [["Repo", "https://github.com/sol-znn/landing_page"]]
+        },
+        {
           "name": "Syrius extension",
           "ver": "0.3.5",
           "what": "Browser wallet for Zenon and EVM chains",
@@ -274,6 +275,13 @@
           "status": "active",
           "dirs": ["go-zenon-fuzz"],
           "links": [["Repo", "https://github.com/sol-znn/go-zenon-fuzz"]]
+        },
+        {
+          "name": "zenon-docs",
+          "what": "Protocol notes, measurements and sources for Network of Momentum",
+          "status": "active",
+          "dirs": ["zenon-docs"],
+          "links": []
         },
         {
           "name": "Kanban",
@@ -308,14 +316,6 @@
             ["Go", "https://github.com/sol-znn/znn-address-generator-go"],
             ["CUDA", "https://github.com/sol-znn/znn-address-generator-cuda"]
           ]
-        },
-        {
-          "name": "zenon.foo",
-          "ver": "0.1.0",
-          "what": "This site",
-          "status": "live",
-          "dirs": ["landing_page"],
-          "links": [["Repo", "https://github.com/sol-znn/landing_page"]]
         }
       ]
     }
