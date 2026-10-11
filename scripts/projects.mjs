@@ -405,7 +405,10 @@ function summarize(before, after) {
 
 async function deploy(data) {
   const before = (() => { try { return JSON.parse(git(REPO, 'show', 'HEAD:projects/projects.json')) } catch { return null } })()
-  const dirty = git(REPO, 'status', '--porcelain').split('\n').filter(Boolean).map((l) => l.slice(3))
+  // -z, not the trimmed text: trimming eats the leading space of the first
+  // " M path" line, and slicing off the status then cuts the path's first letter.
+  const dirty = execFileSync('git', ['-C', REPO, 'status', '--porcelain', '-z'], { encoding: 'utf8' })
+    .split('\0').filter(Boolean).map((l) => l.slice(3))
   const outside = dirty.filter((f) => !f.startsWith('projects/'))
   if (outside.length) fail('uncommitted changes outside projects/ would not be deployed; commit or stash them:\n  ' + outside.join('\n  '))
   git(REPO, 'fetch', 'origin')
