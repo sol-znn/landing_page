@@ -26,6 +26,7 @@ const ui = {
   mark: one<SVGElement>('.mark'),
   jump: el<HTMLAnchorElement>('jump'),
   motion: el<HTMLButtonElement>('motion'),
+  scene: el<HTMLButtonElement>('scene'),
   foot: el<HTMLElement>('foot'),
   netName: el<HTMLElement>('netName'),
   netTag: el<HTMLElement>('netTag'),
@@ -71,6 +72,53 @@ const PLAY_ICON =
 // call that's been superseded by a newer one a no-op instead.
 let motionToken = 0
 
+// There are two backgrounds. The network (bg.ts) is the default; the calm
+// wave (bg-wave.ts) is the page as it was before, for anyone who finds the
+// network too much behind a logo. The button beside the motion toggle swaps
+// them and the choice persists, the same way the motion choice does.
+type Scene = 'network' | 'wave'
+const SCENE_KEY = 'landing:scene'
+
+function storedScene(): Scene {
+  try {
+    return localStorage.getItem(SCENE_KEY) === 'wave' ? 'wave' : 'network'
+  } catch {
+    return 'network'
+  }
+}
+
+let scene: Scene = storedScene()
+
+// Like the motion toggle, the icon is what the click gives you, not what you
+// have: a wave while the network is showing, a graph while the wave is.
+const WAVE_ICON =
+  '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 9c2.5-3.5 5-3.5 7.5 0s5 3.5 7.5 0 3.5-2.6 5-1.6"/><path d="M2 16c2.5-3.5 5-3.5 7.5 0s5 3.5 7.5 0 3.5-2.6 5-1.6"/></svg>'
+const NETWORK_ICON =
+  '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6.5 7.5l5 8.5M17.5 7.5l-5 8.5M7.5 6h9"/><circle cx="5.5" cy="6" r="2"/><circle cx="18.5" cy="6" r="2"/><circle cx="12" cy="18" r="2"/></svg>'
+
+function showScene(): void {
+  const label = scene === 'network' ? 'Calm wave' : 'Network'
+  ui.scene.setAttribute('aria-pressed', String(scene === 'wave'))
+  ui.scene.setAttribute('aria-label', label)
+  ui.scene.title = label
+  ui.scene.innerHTML = scene === 'network' ? WAVE_ICON : NETWORK_ICON
+}
+
+ui.scene.addEventListener('click', () => {
+  scene = scene === 'network' ? 'wave' : 'network'
+  try {
+    localStorage.setItem(SCENE_KEY, scene)
+  } catch {
+    /* the choice just won't survive a reload */
+  }
+  showScene()
+  // The motion state is whatever the other button last set; only the scene
+  // changes. applyMotion's token covers a second click during the import.
+  applyMotion(ui.motion.getAttribute('aria-pressed') === 'true')
+})
+
+showScene()
+
 async function applyMotion(reduced: boolean): Promise<void> {
   const token = ++motionToken
   ui.motion.setAttribute('aria-pressed', String(reduced))
@@ -80,12 +128,16 @@ async function applyMotion(reduced: boolean): Promise<void> {
   ui.motion.innerHTML = reduced ? PLAY_ICON : PAUSE_ICON
   document.body.classList.toggle('still', reduced)
   try {
-    const { startBackground } = await import('./bg.ts')
+    const wanted = scene
+    const { startBackground } = await (wanted === 'wave' ? import('./bg-wave.ts') : import('./bg.ts'))
     if (token !== motionToken) return
     background?.dispose()
     background = startBackground(ui.bg, { reducedMotion: reduced })
-    // A background that arrives while a jump is held (see below) has to be
-    // told, or it would draw the ordinary lattice under the held page.
+    // The field streams out of the mark, so a new background is pointed at it
+    // before its first frame is seen. One that arrives while a jump is held
+    // (see below) is given that too, or it would draw the resting network
+    // under the held page.
+    aimBackground()
     if (heldJump !== null) setJump(heldJump)
   } catch {
     /* no background; the flat one underneath is fine */
@@ -120,16 +172,34 @@ let jumping = false
 /** Set while `?jump=<0..1>` is holding the animation at one moment. */
 let heldJump: number | null = null
 
-/** Points both halves at the middle of the mark and sets the canvas's
- *  progress. Read fresh each time: the mark is scaling while this runs, but
- *  about its own centre, so the point does not move. */
-function setJump(progress: number): void {
+/** The middle of the mark: in pixels for the stylesheet, in NDC for the
+ *  canvas. Read fresh each time. During a jump the mark is scaling, but about
+ *  its own centre, so the point does not move. */
+function markCentre(): { px: [number, number]; ndc: [number, number] } {
   const rect = ui.jump.getBoundingClientRect()
   const cx = rect.left + rect.width / 2
   const cy = rect.top + rect.height / 2
-  document.body.style.setProperty('--jx', `${cx}px`)
-  document.body.style.setProperty('--jy', `${cy}px`)
-  background?.setJump(progress, (cx / window.innerWidth) * 2 - 1, -((cy / window.innerHeight) * 2 - 1))
+  return { px: [cx, cy], ndc: [(cx / window.innerWidth) * 2 - 1, -((cy / window.innerHeight) * 2 - 1)] }
+}
+
+/** Puts the background's vanishing point on the mark. The mark sits above
+ *  the footer, not in the middle of the window, and how far above depends on
+ *  the window. */
+function aimBackground(): void {
+  background?.aim(...markCentre().ndc)
+}
+
+// Layout is not final when the script first runs (the footer's text is set
+// further down, and it moves the mark), and it changes on every resize.
+window.addEventListener('load', aimBackground)
+window.addEventListener('resize', aimBackground)
+
+/** Points both halves at the mark and sets the canvas's progress. */
+function setJump(progress: number): void {
+  const { px, ndc } = markCentre()
+  document.body.style.setProperty('--jx', `${px[0]}px`)
+  document.body.style.setProperty('--jy', `${px[1]}px`)
+  background?.setJump(progress, ...ndc)
 }
 
 function playJump(href: string): void {

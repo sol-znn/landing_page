@@ -248,6 +248,12 @@ body {
   transition: border-color 0.15s, color 0.15s;
 }
 
+/* The scene button is the same control one place to the left: 34px of
+   button and an 8px gap. */
+.scene-toggle {
+  right: 58px;
+}
+
 .motion-toggle:hover {
   border-color: var(--green-dim);
   color: var(--green);
