@@ -1,0 +1,323 @@
+{
+  "root": "..",
+  "owners": ["sol-znn"],
+  "liveUrl": "https://www.zenon.foo/projects/",
+  "repo": "sol-znn/landing_page",
+  "statuses": ["live", "devnet", "review", "active", "prototype", "research", "stable", "deprecated"],
+  "placement": [
+    {
+      "match": "^zvm-",
+      "section": "zvm"
+    },
+    {
+      "match": "^(zenon-|znn-|go-zenon|rust-zenon)",
+      "section": "protocol"
+    },
+    {
+      "match": "",
+      "section": "tools"
+    }
+  ],
+  "ignore": {
+    "webdesign-lab": "not a Zenon project",
+    "zenon-docs": "reference material, not a project",
+    "znn-bruteforce-cuda": "treasure hunt tooling, kept off the page",
+    "znn-bruteforce-go": "treasure hunt tooling, kept off the page",
+    "znn-treasure": "private"
+  },
+  "sections": [
+    {
+      "id": "protocol",
+      "title": "Protocol",
+      "projects": [
+        {
+          "name": "PTLC",
+          "what": "Point time locked contracts for go-zenon",
+          "status": "review",
+          "dirs": ["zenon-ptlc", "ptlc-console"],
+          "links": [
+            ["PR 138", "https://github.com/zenon-network/go-zenon/pull/138"],
+            ["Console", "https://ptlc.zenon.foo/"],
+            ["Repo", "https://github.com/sol-znn/ptlc-console"]
+          ]
+        },
+        {
+          "name": "Pillar transfer",
+          "ver": "0.1.0",
+          "what": "Sell a Pillar to a named buyer against a secret",
+          "status": "prototype",
+          "dirs": ["pillar-transfer-console"],
+          "links": [
+            ["Console", "https://pillar.zenon.foo/"],
+            ["Repo", "https://github.com/sol-znn/pillar-transfer-console"]
+          ]
+        },
+        {
+          "name": "Phase 1 roadmap",
+          "what": "A community plan for Phase 1, on one page",
+          "status": "live",
+          "dirs": ["zenon-roadmap"],
+          "links": [
+            ["Site", "https://sol-znn.github.io/zenon-roadmap/"],
+            ["Repo", "https://github.com/sol-znn/zenon-roadmap"]
+          ]
+        },
+        {
+          "name": "zenon.zip",
+          "what": "Zenon Improvement Proposals, published on Nostr",
+          "status": "live",
+          "dirs": ["zips"],
+          "links": [["Site", "https://zenon.zip/"]]
+        },
+        {
+          "name": "Sentinels",
+          "what": "Audited archival nodes that also relay proof-of-work",
+          "status": "prototype",
+          "dirs": ["zenon-sentinels", "zenon-infra"],
+          "links": [["Demo", "https://sentinel.zenon.foo/poc"]]
+        },
+        {
+          "name": "Fast finality",
+          "what": "Momentum finality from producer attestations",
+          "status": "research",
+          "dirs": ["zenon-fastfinality"],
+          "links": []
+        },
+        {
+          "name": "Fast sync",
+          "what": "Sync a new node in minutes from a state snapshot",
+          "status": "research",
+          "dirs": ["zenon-fastsync"],
+          "links": []
+        },
+        {
+          "name": "Zenon Evolution",
+          "what": "A redesign study for Network of Momentum",
+          "status": "research",
+          "dirs": ["zenon-evolution"],
+          "links": []
+        },
+        {
+          "name": "Emissions",
+          "what": "Fund Accelerator-Z from existing emission",
+          "status": "research",
+          "dirs": ["znn-emissions"],
+          "links": []
+        },
+        {
+          "name": "Governance",
+          "what": "Voting rules measured against the real electorate",
+          "status": "research",
+          "dirs": ["zenon-governance"],
+          "links": []
+        },
+        {
+          "name": "Orrery",
+          "what": "Collateralised notes for any asset on any chain, Bitcoin first",
+          "status": "prototype",
+          "dirs": ["zenon-orrery"],
+          "links": []
+        },
+        {
+          "name": "rust-zenon",
+          "what": "A Rust node that matches go-zenon byte for byte",
+          "status": "research",
+          "dirs": ["rust-zenon"],
+          "links": []
+        }
+      ]
+    },
+    {
+      "id": "swaps",
+      "title": "Swaps and tokens",
+      "projects": [
+        {
+          "name": "Ferry",
+          "ver": "0.1.1",
+          "what": "Atomic swaps between Bitcoin, Zenon and Solana",
+          "status": "live",
+          "dirs": ["ferry-web"],
+          "links": [["Site", "https://ferry.zenon.foo/"], ["Repo", "https://github.com/sol-znn/ferry-web"]]
+        },
+        {
+          "name": "Zenoglyphs faucet",
+          "ver": "0.1.0",
+          "what": "Claim GLYPHS by locking PlasmaPoints",
+          "status": "live",
+          "dirs": ["zenon-faucet"],
+          "links": [
+            ["Site", "https://zenoglyphs.zenon.foo/"],
+            ["Repo", "https://github.com/sol-znn/zenon-faucet"]
+          ]
+        },
+        {
+          "name": "Zenoglyphs",
+          "what": "Inscriptions carried in ordinary account blocks",
+          "status": "deprecated",
+          "dirs": [],
+          "links": []
+        }
+      ]
+    },
+    {
+      "id": "zvm",
+      "title": "ZVM devnet",
+      "projects": [
+        {
+          "name": "ZVM",
+          "what": "The rollup behind the devnet: node, relayer, bridge",
+          "status": "devnet",
+          "dirs": ["zvm", "zvm-core", "zvm-node", "zvm-relayer", "zvm-bridge", "zvm-fleet", "zvm-docs"],
+          "links": []
+        },
+        {
+          "name": "Devnet",
+          "what": "An EVM rollup on its own Zenon chain",
+          "status": "devnet",
+          "dirs": ["zvm-status"],
+          "links": [["Site", "https://devnet.zenon.foo/"], ["Status", "https://devnet.zenon.foo/status/"]]
+        },
+        {
+          "name": "Explorer",
+          "ver": "0.1.0",
+          "what": "Blocks, transactions and accounts",
+          "status": "devnet",
+          "dirs": ["zvm-explorer"],
+          "links": [["Site", "https://devnet.zenon.foo/explorer/"]]
+        },
+        {
+          "name": "Glyphswap",
+          "ver": "0.1.0",
+          "what": "Token swaps and pools",
+          "status": "devnet",
+          "dirs": ["zvm-glyphswap"],
+          "links": [["Site", "https://devnet.zenon.foo/glyphswap/"]]
+        },
+        {
+          "name": "Karum",
+          "ver": "0.1.0",
+          "what": "NFT market",
+          "status": "devnet",
+          "dirs": ["zvm-karum", "zvm-nft"],
+          "links": [["Site", "https://devnet.zenon.foo/karum/"]]
+        },
+        {
+          "name": "Spark",
+          "ver": "0.1.0",
+          "what": "Token launchpad",
+          "status": "devnet",
+          "dirs": ["zvm-spark"],
+          "links": [["Site", "https://devnet.zenon.foo/spark/"]]
+        },
+        {
+          "name": "ZNS",
+          "ver": "0.1.0",
+          "what": ".znn names",
+          "status": "devnet",
+          "dirs": ["zvm-zns"],
+          "links": [["Site", "https://devnet.zenon.foo/zns/"]]
+        },
+        {
+          "name": "Mozaic",
+          "ver": "0.1.0",
+          "what": "A shared pixel canvas",
+          "status": "devnet",
+          "dirs": ["zvm-mozaic"],
+          "links": [["Site", "https://devnet.zenon.foo/mozaic/"]]
+        },
+        {
+          "name": "zchan",
+          "ver": "0.1.0",
+          "what": "An image board kept in one contract's logs",
+          "status": "devnet",
+          "dirs": ["zvm-zchan"],
+          "links": [["Site", "https://devnet.zenon.foo/zchan/"]]
+        },
+        {
+          "name": "Bullet Game",
+          "ver": "0.1.0",
+          "what": "A Telegram game with an on-chain escrow",
+          "status": "devnet",
+          "dirs": ["zvm-bullet"],
+          "links": [["Site", "https://devnet.zenon.foo/bullet/"]]
+        },
+        {
+          "name": "Rain",
+          "ver": "0.1.0",
+          "what": "A Telegram bot that splits tokens across a group",
+          "status": "devnet",
+          "dirs": ["zvm-rain"],
+          "links": [["Site", "https://devnet.zenon.foo/rain/"]]
+        }
+      ]
+    },
+    {
+      "id": "tools",
+      "title": "Tools",
+      "projects": [
+        {
+          "name": "Syrius extension",
+          "ver": "0.3.5",
+          "what": "Browser wallet for Zenon and EVM chains",
+          "status": "active",
+          "dirs": [
+            "syrius-extension",
+            "syrius-extension-docs",
+            "syrius-extension-journal",
+            "syrius-extension-audit-tools"
+          ],
+          "links": [["Repo", "https://github.com/sol-znn/syrius-extension"]]
+        },
+        {
+          "name": "go-zenon fuzz",
+          "what": "Fuzzing the node's parsers, RPC and block pipeline",
+          "status": "active",
+          "dirs": ["go-zenon-fuzz"],
+          "links": [["Repo", "https://github.com/sol-znn/go-zenon-fuzz"]]
+        },
+        {
+          "name": "Kanban",
+          "what": "Phase 1 as epics, each fact with its evidence",
+          "status": "research",
+          "dirs": ["zenon-kanban"],
+          "links": []
+        },
+        {
+          "name": "zts-airdrop",
+          "ver": "0.1.0",
+          "what": "Send a token to every address active in a range of momentums",
+          "status": "stable",
+          "dirs": ["zts-airdrop"],
+          "links": [["Repo", "https://github.com/sol-znn/zts-airdrop"]]
+        },
+        {
+          "name": "vanity-zts",
+          "ver": "1.0.0",
+          "what": "Mine a token address with a chosen prefix",
+          "status": "stable",
+          "dirs": ["vanity-zts"],
+          "links": [["Repo", "https://github.com/sol-znn/vanity-zts"]]
+        },
+        {
+          "name": "Address generator",
+          "ver": "1.0.0",
+          "what": "Vanity Zenon addresses, on the CPU or the GPU",
+          "status": "stable",
+          "dirs": ["znn-address-generator-go", "znn-address-generator-cuda"],
+          "links": [
+            ["Go", "https://github.com/sol-znn/znn-address-generator-go"],
+            ["CUDA", "https://github.com/sol-znn/znn-address-generator-cuda"]
+          ]
+        },
+        {
+          "name": "zenon.foo",
+          "ver": "0.1.0",
+          "what": "This site",
+          "status": "live",
+          "dirs": ["landing_page"],
+          "links": [["Repo", "https://github.com/sol-znn/landing_page"]]
+        }
+      ]
+    }
+  ]
+}

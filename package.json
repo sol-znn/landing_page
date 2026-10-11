@@ -8,7 +8,9 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "projects:scan": "node scripts/projects.mjs scan",
+    "projects:deploy": "node scripts/projects.mjs deploy"
   },
   "dependencies": {
     "three": "^0.185.1"

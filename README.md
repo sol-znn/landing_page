@@ -65,10 +65,35 @@ looking at one frame of it.
 ## The projects index
 
 `projects/index.html`, served at `/projects/` and linked from the word above the
-GitHub icon. A hand-written list of projects with a one-line description, a
-status and links, styled by `src/projects.css`, with no script. Statuses come
-from a fixed set of eight words listed in that stylesheet. It is a second entry
-in `vite.config.ts`; a page not listed there is left out of `dist/` silently.
+GitHub icon. Its rows are generated from `projects/projects.json` by
+`scripts/projects.mjs`; the page itself has no script. Statuses come from a fixed
+set of eight words listed in `src/projects.css`. It is a second entry in
+`vite.config.ts`; a page not listed there is left out of `dist/` silently.
+
+Each project names the directories under `C:\dev\zenon` it comes from
+(`dirs`), so the tree can be scanned against the page:
+
+```
+npm run projects:scan      # what an update would change; writes nothing
+npm run projects:deploy    # update, verify, commit, push, wait for Pages, check live
+node scripts/projects.mjs verify [--offline]
+```
+
+A scan refreshes each project's version from its first directory (newest
+`vX.Y.Z` tag, else `package.json`, else `Cargo.toml`), adds a Repo link when
+that directory's origin becomes a public `sol-znn` repository, and adds any
+directory nobody has claimed as a new project, placed by the `placement`
+rules and described from its README's first sentence. A directory is never
+proposed if it is in `ignore`, has no `README.md`, or tracks someone else's
+repository. Read the scan before deploying: a new project's line and status
+are guesses, and are fixed by editing the JSON.
+
+Verify fails on an unknown status, a dash in interface text, an empty
+section, a name used twice, HTML out of step with the JSON, a failed build,
+a built page missing a row or its stylesheet, or a link that does not
+answer. Deploy refuses uncommitted work outside `projects/`, a branch other
+than `master`, or one behind `origin`, and ends only when the live page
+serves the same rows as the build.
 
 ## Running it
 
