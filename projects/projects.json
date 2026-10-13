@@ -286,7 +286,7 @@
           "what": "The desktop wallet, rebuilt with a modern interface",
           "status": "prototype",
           "dirs": ["syrius-sol"],
-          "links": [["Repo", "https://github.com/sol-znn/syrius"]]
+          "links": [["Demo", "https://syrius.zenon.foo/"], ["Repo", "https://github.com/sol-znn/syrius"]]
         },
         {
           "name": "go-zenon fuzz",
@@ -339,5 +339,5 @@
       ]
     }
   ],
-  "updated": "2026-10-13T22:44:21Z"
+  "updated": "2026-10-13T23:10:53Z"
 }
