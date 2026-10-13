@@ -107,14 +107,14 @@
         {
           "name": "Orrery",
           "what": "Collateralised notes for any asset on any chain, Bitcoin first",
-          "status": "active",
+          "status": "prototype",
           "dirs": ["zenon-orrery"],
           "links": []
         },
         {
           "name": "rust-zenon",
           "what": "A modular Zenon client in Rust, built for speed, safety and node diversity",
-          "status": "active",
+          "status": "prototype",
           "dirs": ["rust-zenon"],
           "links": []
         }
@@ -131,6 +131,17 @@
           "status": "live",
           "dirs": ["ferry-web"],
           "links": [["Site", "https://ferry.zenon.foo/"], ["Repo", "https://github.com/sol-znn/ferry-web"]]
+        },
+        {
+          "name": "Bridge",
+          "ver": "2.0.0",
+          "what": "Move ZNN and QSR between Zenon, Ethereum and BNB Chain",
+          "status": "live",
+          "dirs": ["bridge.mainnet.zenon.community"],
+          "links": [
+            ["Site", "https://bridge.zenon.foo/"],
+            ["Repo", "https://github.com/sol-znn/bridge.mainnet.zenon.community"]
+          ]
         },
         {
           "name": "Zenoglyphs faucet",
@@ -320,5 +331,5 @@
       ]
     }
   ],
-  "updated": "2026-10-13T03:18:16Z"
+  "updated": "2026-10-13T03:27:02Z"
 }
