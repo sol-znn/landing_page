@@ -269,9 +269,10 @@
         },
         {
           "name": "Syrius extension",
-          "ver": "0.3.5",
-          "what": "Browser wallet for Zenon and EVM chains",
-          "status": "active",
+          "ver": "0.3.6",
+          "what": "Browser and mobile wallet",
+          "platforms": ["chrome", "firefox", "android", "ios"],
+          "status": "live",
           "dirs": [
             "syrius-extension",
             "syrius-extension-docs",
@@ -279,6 +280,13 @@
             "syrius-extension-audit-tools"
           ],
           "links": [["Repo", "https://github.com/sol-znn/syrius-extension"]]
+        },
+        {
+          "name": "Syrius",
+          "what": "The desktop wallet, rebuilt with a modern interface",
+          "status": "prototype",
+          "dirs": ["syrius-sol"],
+          "links": [["Repo", "https://github.com/sol-znn/syrius"]]
         },
         {
           "name": "go-zenon fuzz",
@@ -295,10 +303,10 @@
           "links": []
         },
         {
-          "name": "Kanban",
-          "what": "Phase 1 as epics, each fact with its evidence",
-          "status": "research",
-          "dirs": ["zenon-kanban"],
+          "name": "Foundry",
+          "what": "A bounty board on GitHub, paid on chain by a quorum of signers",
+          "status": "prototype",
+          "dirs": ["zenon-foundry"],
           "links": []
         },
         {
@@ -331,5 +339,5 @@
       ]
     }
   ],
-  "updated": "2026-10-13T03:27:02Z"
+  "updated": "2026-10-13T06:31:06Z"
 }

@@ -250,6 +250,21 @@ details[open] > .rows {
   font-size: 14px;
 }
 
+/* Platform marks after the line, the text's own grey, a little smaller than
+   its capitals so they sit on the line rather than over it. */
+.platforms {
+  display: inline-flex;
+  gap: 6px;
+  margin-left: 4px;
+  vertical-align: -1px;
+}
+
+.platforms svg {
+  width: 13px;
+  height: 13px;
+  fill: currentColor;
+}
+
 /* A status is a shape and a word, never the colour alone. One word per
    state, from this set: Live, Devnet, In review, Active, Prototype, Research,
    Stable, Deprecated. Filled means it runs somewhere you can reach; a ring means it is

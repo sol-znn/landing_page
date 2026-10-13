@@ -70,7 +70,9 @@ GitHub icon. Its rows are generated from `projects/projects.json` by
 `<details>`, closed by default, with its row count on the bar. The footer
 says when the list last changed: `updated` in the JSON, which the script
 stamps only when the rendered rows differ from the committed page. Statuses come from a fixed
-set of eight words listed in `src/projects.css`. It is a second entry in
+set of eight words listed in `src/projects.css`. A row may list `platforms`
+(`chrome`, `firefox`, `android`, `ios`), drawn as small marks after its line
+from Simple Icons paths kept in `scripts/projects.mjs`. It is a second entry in
 `vite.config.ts`; a page not listed there is left out of `dist/` silently.
 
 Each project names the directories under `C:\dev\zenon` it comes from
