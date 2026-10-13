@@ -72,14 +72,14 @@
         {
           "name": "Fast finality",
           "what": "Momentum finality from producer attestations",
-          "status": "research",
+          "status": "prototype",
           "dirs": ["zenon-fastfinality"],
           "links": []
         },
         {
           "name": "Fast sync",
           "what": "Sync a new node in minutes from a state snapshot",
-          "status": "research",
+          "status": "prototype",
           "dirs": ["zenon-fastsync"],
           "links": []
         },
@@ -93,7 +93,7 @@
         {
           "name": "Emissions",
           "what": "Fund Accelerator-Z from existing emission",
-          "status": "research",
+          "status": "prototype",
           "dirs": ["znn-emissions"],
           "links": []
         },
@@ -107,14 +107,14 @@
         {
           "name": "Orrery",
           "what": "Collateralised notes for any asset on any chain, Bitcoin first",
-          "status": "prototype",
+          "status": "active",
           "dirs": ["zenon-orrery"],
           "links": []
         },
         {
           "name": "rust-zenon",
           "what": "A modular Zenon client in Rust, built for speed, safety and node diversity",
-          "status": "research",
+          "status": "active",
           "dirs": ["rust-zenon"],
           "links": []
         }
@@ -279,7 +279,7 @@
         {
           "name": "zenon-docs",
           "what": "Protocol notes, measurements and sources for Network of Momentum",
-          "status": "active",
+          "status": "research",
           "dirs": ["zenon-docs"],
           "links": []
         },
@@ -320,5 +320,5 @@
       ]
     }
   ],
-  "updated": "2026-10-11T20:43:29Z"
+  "updated": "2026-10-13T03:18:16Z"
 }
